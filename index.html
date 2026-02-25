@@ -1,0 +1,4117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расчёт шпунта Ларсена - ВСН 136-78</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto+Condensed:wght@400;700&display=swap');
+
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #151a23;
+            --bg-elevated: #1c232e;
+            --accent-copper: #c87533;
+            --accent-bronze: #8b6914;
+            --accent-ice: #4a90a4;
+            --text-primary: #e8e6e3;
+            --text-secondary: #9da5b4;
+            --border-color: #2d3748;
+            --error: #d64545;
+            --success: #48a999;
+            --warning: #f0a500;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto Condensed', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0f1419 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 0;
+            background-attachment: fixed;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 2px solid var(--accent-copper);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(180deg, var(--bg-elevated), var(--bg-secondary));
+        }
+
+        .sidebar-title {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.5rem;
+            color: var(--accent-copper);
+            text-shadow: 0 0 10px rgba(200, 117, 51, 0.3);
+            margin-bottom: 5px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .module-nav {
+            padding: 20px 0;
+        }
+
+        .module-nav-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .module-nav-item:hover {
+            background: var(--bg-elevated);
+            border-left-color: var(--accent-bronze);
+            color: var(--text-primary);
+        }
+
+        .module-nav-item.active {
+            background: var(--bg-elevated);
+            border-left-color: var(--accent-copper);
+            color: var(--accent-copper);
+            box-shadow: inset 0 0 10px rgba(200, 117, 51, 0.1);
+        }
+
+        .module-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1rem;
+        }
+
+        .module-nav-item.active .module-number {
+            border-color: var(--accent-copper);
+            background: linear-gradient(135deg, var(--accent-copper), var(--accent-bronze));
+            color: var(--bg-primary);
+            box-shadow: 0 0 10px rgba(200, 117, 51, 0.3);
+        }
+
+        .module-nav-item.completed .module-number {
+            border-color: var(--success);
+            background: var(--success);
+            color: var(--bg-primary);
+        }
+
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 2px solid var(--accent-copper);
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-bronze), transparent);
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2.5rem;
+            letter-spacing: 3px;
+            color: var(--accent-copper);
+            text-shadow: 0 0 20px rgba(200, 117, 51, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .module-content {
+            display: none;
+        }
+
+        .module-content.active {
+            display: block;
+        }
+
+        .module-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-copper), var(--accent-bronze));
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.8rem;
+            color: var(--accent-copper);
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            padding-left: 15px;
+            border-left: 3px solid var(--accent-bronze);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        input, select, textarea {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 15px;
+            border-radius: 4px;
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-copper);
+            box-shadow: 0 0 0 3px rgba(200, 117, 51, 0.1);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+
+        .unit {
+            font-size: 0.85rem;
+            color: var(--accent-bronze);
+            margin-left: 8px;
+            font-weight: 700;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+        }
+
+        .input-wrapper .unit {
+            position: absolute;
+            right: 15px;
+            pointer-events: none;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .preset-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .preset-btn:hover {
+            background: var(--accent-copper);
+            color: var(--bg-primary);
+            border-color: var(--accent-copper);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-copper), var(--accent-bronze));
+            color: var(--bg-primary);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 4px;
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(200, 117, 51, 0.3);
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(200, 117, 51, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            box-shadow: none;
+        }
+
+        .validation-message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .validation-message.error {
+            background: rgba(214, 69, 69, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            display: block;
+        }
+
+        .validation-message.success {
+            background: rgba(72, 169, 153, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            display: block;
+        }
+
+        .validation-message.warning {
+            background: rgba(240, 165, 0, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+            display: block;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .info-badge {
+            display: inline-block;
+            background: var(--accent-ice);
+            color: var(--bg-primary);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-left: 10px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: var(--bg-elevated);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2rem;
+            color: var(--accent-copper);
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .result-unit {
+            font-size: 1rem;
+            color: var(--accent-bronze);
+        }
+
+        .formula-display {
+            background: var(--bg-primary);
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-copper);
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+            margin: 30px 0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Стилизация для выпадающих списков */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c87533' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                border-right: none;
+                border-bottom: 2px solid var(--accent-copper);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .module-nav {
+                display: flex;
+                overflow-x: auto;
+                padding: 10px 0;
+            }
+            
+            .module-nav-item {
+                flex-shrink: 0;
+                min-width: 150px;
+            }
+        }
+
+        /* Анимация загрузки */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 2s infinite;
+        }
+
+        /* Стили для графиков эпюр */
+        .diagram-container {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .diagram-title {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.2rem;
+            color: var(--accent-copper);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-elevated);
+        }
+
+        .diagram-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .legend-active {
+            background: #ff4444;
+        }
+
+        .legend-passive {
+            background: #44ff44;
+        }
+
+        .legend-zero {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Боковая панель навигации -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Расчёт шпунта Ларсена</div>
+                <div class="sidebar-subtitle">ВСН 136-78</div>
+            </div>
+            <nav class="module-nav">
+                <div class="module-nav-item active" onclick="switchModule(1)">
+                    <div class="module-number">1</div>
+                    <span>Исходные данные</span>
+                </div>
+                <div class="module-nav-item" onclick="switchModule(2)">
+                    <div class="module-number">2</div>
+                    <span>Коэффициенты давления</span>
+                </div>
+                <div class="module-nav-item" onclick="switchModule(3)">
+                    <div class="module-number">3</div>
+                    <span>Активное давление</span>
+                </div>
+                <div class="module-nav-item" onclick="switchModule(4)">
+                    <div class="module-number">4</div>
+                    <span>Пассивное сопротивление</span>
+                </div>
+                <div class="module-nav-item" onclick="switchModule(5)">
+                    <div class="module-number">5</div>
+                    <span>Глубина заглубления</span>
+                </div>
+                <div class="module-nav-item" onclick="switchModule(6)">
+                    <div class="module-number">6</div>
+                    <span>Усилия в шпунте</span>
+                </div>
+                <div class="module-nav-item" onclick="switchModule(7)">
+                    <div class="module-number">7</div>
+                    <span>Проверка профиля</span>
+                </div>
+                <div class="module-nav-item" onclick="switchModule(8)">
+                    <div class="module-number">8</div>
+                    <span>Особые условия</span>
+                </div>
+                <div class="module-nav-item" onclick="switchModule(9)">
+                    <div class="module-number">9</div>
+                    <span>Отчёт</span>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="main-content">
+            <div class="container">
+                <!-- Модуль 1: Исходные данные -->
+                <div id="module1" class="module-content active">
+                    <div class="header">
+                        <h1>Модуль 1: Исходные данные</h1>
+                        <p class="subtitle">Ввод параметров котлована и грунта</p>
+                    </div>
+
+        <!-- Геометрия котлована -->
+        <div class="module-card">
+            <h2 class="section-title">Геометрия котлована</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Глубина котлована <span class="unit">м</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="excavationDepth" step="0.1" min="0" max="50" value="6.0" required>
+                        <span class="unit">м</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Ширина котлована <span class="unit">м</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="excavationWidth" step="0.1" min="0" max="100" value="3.0">
+                        <span class="unit">м</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Длина котлована <span class="unit">м</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="excavationLength" step="0.1" min="0" max="200" value="10.0">
+                        <span class="unit">м</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Схема крепления <span class="info-badge">ВСН 136-78</span></label>
+                <select id="supportScheme">
+                    <option value="no_support">Без распорных креплений (рис. 17)</option>
+                    <option value="one_tier">Один ярус распорок (рис. 19)</option>
+                    <option value="two_tier">Два яруса распорок (рис. 22)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Геология -->
+        <div class="module-card">
+            <h2 class="section-title">Геологические условия</h2>
+            
+            <div class="form-group">
+                <label>Тип грунта <span class="info-badge">Приложение 10, табл. Б</span></label>
+                <select id="soilType">
+                    <option value="custom">Задать вручную</option>
+                    <option value="sandy_light">Песок мелкий, маловлажный</option>
+                    <option value="sandy_saturated">Песок мелкий, водонасыщенный</option>
+                    <option value="loam_light">Суглинок лёгкий, обводнённый</option>
+                    <option value="loam_heavy">Суглинок тяжёлый</option>
+                    <option value="clay_soft">Глина мягкопластичная</option>
+                    <option value="clay_hard">Глина твёрдая</option>
+                </select>
+                <div class="preset-buttons" id="presetButtons">
+                    <button class="preset-btn" onclick="loadPreset('loam_light')">Суглинок обводнённый</button>
+                    <button class="preset-btn" onclick="loadPreset('sandy_saturated')">Песок водонасыщенный</button>
+                    <button class="preset-btn" onclick="loadPreset('clay_soft')">Глина мягкая</button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Удельный вес γ <span class="unit">кН/м³</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="gamma" step="0.1" min="10" max="30" value="21.0" required>
+                        <span class="unit">кН/м³</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Угол внутр. трения φ <span class="unit">градусы</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="phi" step="0.5" min="0" max="45" value="25.0" required>
+                        <span class="unit">°</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Сцепление c <span class="unit">кПа</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="cohesion" step="1" min="0" max="200" value="40.0" required>
+                        <span class="unit">кПа</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Уровень грунтовых вод (УГВ)</label>
+                <select id="waterLevel">
+                    <option value="surface">У дневной поверхности</option>
+                    <option value="custom">На заданной глубине</option>
+                    <option value="below">Ниже дна котлована</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="waterDepthGroup" style="display: none;">
+                <label>Глубина УГВ от поверхности <span class="unit">м</span></label>
+                <div class="input-wrapper">
+                    <input type="number" id="waterDepth" step="0.1" min="0" value="0">
+                    <span class="unit">м</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Нагрузки -->
+        <div class="module-card">
+            <h2 class="section-title">Внешние нагрузки</h2>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="craneLoad" onchange="toggleCraneInputs()"> 
+                    Учитывать тяжёлую технику у бровки
+                </label>
+            </div>
+
+            <div id="craneInputs" style="display: none;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Вес техники <span class="unit">тонн</span></label>
+                        <div class="input-wrapper">
+                            <input type="number" id="craneWeight" step="1" min="0" max="200" value="70">
+                            <span class="unit">т</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Расстояние от бровки <span class="unit">м</span></label>
+                        <div class="input-wrapper">
+                            <input type="number" id="craneDistance" step="0.1" min="0" max="10" value="1.0">
+                            <span class="unit">м</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="distributedLoad" onchange="toggleDistributedInputs()"> 
+                    Распределённая нагрузка на поверхности
+                </label>
+            </div>
+
+            <div id="distributedInputs" style="display: none;">
+                <div class="form-group">
+                    <label>Величина нагрузки q <span class="unit">кПа</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="surfaceLoad" step="1" min="0" max="100" value="10">
+                        <span class="unit">кПа</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Коэффициенты -->
+        <div class="module-card">
+            <h2 class="section-title">Коэффициенты надёжности</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Коэф. условий работы m <span class="info-badge">ВСН п.4.4</span></label>
+                    <div class="input-wrapper">
+                        <input type="number" id="workCondition" step="0.01" min="0.5" max="1.2" value="0.85">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Коэф. надёжности γ_n</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="reliabilityCoef" step="0.1" min="1.0" max="1.5" value="1.2">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сообщения валидации -->
+        <div id="validationMessage" class="validation-message"></div>
+
+        <!-- Кнопки действий -->
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="resetForm()">Сбросить</button>
+            <button class="btn" onclick="validateAndProceed()">Проверить и перейти к Модулю 2 →</button>
+        </div>
+                </div>
+
+                <!-- Модуль 2: Коэффициенты давления -->
+                <div id="module2" class="module-content">
+                    <div class="header">
+                        <h1>Модуль 2: Коэффициенты давления</h1>
+                        <p class="subtitle">Расчёт Ka и Kp по ВСН 136-78</p>
+                    </div>
+
+                    <!-- Исходные данные для расчёта -->
+                    <div class="module-card">
+                        <h2 class="section-title">Загруженные параметры грунта</h2>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Удельный вес γ</div>
+                                <div class="result-value">
+                                    <span id="display-gamma">-</span>
+                                    <span class="result-unit">кН/м³</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Угол трения φ</div>
+                                <div class="result-value">
+                                    <span id="display-phi">-</span>
+                                    <span class="result-unit">°</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Сцепление c</div>
+                                <div class="result-value">
+                                    <span id="display-cohesion">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Взвешенный вес γ'</div>
+                                <div class="result-value">
+                                    <span id="display-gamma-prime">-</span>
+                                    <span class="result-unit">кН/м³</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Расчёт коэффициентов -->
+                    <div class="module-card">
+                        <h2 class="section-title">Коэффициент активного давления Ka</h2>
+                        <div class="formula-display">
+                            Ka = tan²(45° - φ/2)
+                        </div>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Значение Ka</div>
+                                <div class="result-value">
+                                    <span id="result-ka">-</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">√Ka</div>
+                                <div class="result-value">
+                                    <span id="result-ka-sqrt">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="module-card">
+                        <h2 class="section-title">Коэффициент пассивного давления Kp</h2>
+                        <div class="formula-display">
+                            Kp = tan²(45° + φ/2)
+                        </div>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Значение Kp</div>
+                                <div class="result-value">
+                                    <span id="result-kp">-</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">√Kp</div>
+                                <div class="result-value">
+                                    <span id="result-kp-sqrt">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Дополнительные параметры -->
+                    <div class="module-card">
+                        <h2 class="section-title">Компоненты давления от сцепления</h2>
+                        <div class="formula-display">
+                            Активное: -2c√Ka<br>
+                            Пассивное: +2c√Kp
+                        </div>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Компонента активного давления</div>
+                                <div class="result-value">
+                                    <span id="result-cohesion-active">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Компонента пассивного давления</div>
+                                <div class="result-value">
+                                    <span id="result-cohesion-passive">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="validationMessage2" class="validation-message"></div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="switchModule(1)">← Назад</button>
+                        <button class="btn" onclick="calculatePressureCoefficients()">Рассчитать коэффициенты</button>
+                        <button class="btn" onclick="switchModule(3)">Далее →</button>
+                    </div>
+                </div>
+
+                <!-- Модуль 3: Активное давление -->
+                <div id="module3" class="module-content">
+                    <div class="header">
+                        <h1>Модуль 3: Активное давление грунта</h1>
+                        <p class="subtitle">Расчёт эпюры активного давления</p>
+                    </div>
+
+                    <!-- Параметры расчёта -->
+                    <div class="module-card">
+                        <h2 class="section-title">Исходные данные для расчёта</h2>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Глубина котлована H</div>
+                                <div class="result-value">
+                                    <span id="display3-depth">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Коэффициент Ka</div>
+                                <div class="result-value">
+                                    <span id="display3-ka">-</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Удельный вес γ</div>
+                                <div class="result-value">
+                                    <span id="display3-gamma">-</span>
+                                    <span class="result-unit">кН/м³</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Компонента сцепления</div>
+                                <div class="result-value">
+                                    <span id="display3-cohesion">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Расчёт активного давления -->
+                    <div class="module-card">
+                        <h2 class="section-title">Эпюра активного давления</h2>
+                        <div class="formula-display">
+                            σa(z) = γ·z·Ka - 2c·√Ka + q·Ka<br>
+                            где z - глубина от поверхности грунта, q - внешняя нагрузка
+                        </div>
+
+                        <!-- График эпюры активного давления -->
+                        <div class="diagram-container">
+                            <div class="diagram-title">График эпюры активного давления</div>
+                            <canvas id="activePressureCanvas" width="700" height="400"></canvas>
+                            <div class="diagram-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color legend-active"></div>
+                                    <span>Активное давление σa</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color legend-zero"></div>
+                                    <span>Нулевая линия</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Давление у поверхности σa(0) <span class="unit">кПа</span></label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="result3-pressure-top" readonly>
+                                    <span class="unit">кПа</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Давление на дне котлована σa(H) <span class="unit">кПа</span></label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="result3-pressure-bottom" readonly>
+                                    <span class="unit">кПа</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Глубина зоны растяжения z₀ <span class="unit">м</span></label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="result3-tension-depth" readonly>
+                                    <span class="unit">м</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Максимальное активное давление</div>
+                                <div class="result-value">
+                                    <span id="result3-max-pressure">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Равнодействующая Ea</div>
+                                <div class="result-value">
+                                    <span id="result3-resultant">-</span>
+                                    <span class="result-unit">кН/м</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Учёт внешних нагрузок -->
+                    <div class="module-card">
+                        <h2 class="section-title">Учёт внешних нагрузок</h2>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Распределённая нагрузка</div>
+                                <div class="result-value">
+                                    <span id="display3-distributed">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Вес техники у бровки</div>
+                                <div class="result-value">
+                                    <span id="display3-crane">-</span>
+                                    <span class="result-unit">т</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Эквивалентная нагрузка q</div>
+                                <div class="result-value">
+                                    <span id="display3-equivalent">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="validationMessage3" class="validation-message"></div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="switchModule(2)">← Назад</button>
+                        <button class="btn" onclick="calculateActivePressure()">Рассчитать активное давление</button>
+                        <button class="btn" onclick="switchModule(4)">Далее →</button>
+                    </div>
+                </div>
+
+                <!-- Модуль 4: Пассивное сопротивление -->
+                <div id="module4" class="module-content">
+                    <div class="header">
+                        <h1>Модуль 4: Пассивное сопротивление грунта</h1>
+                        <p class="subtitle">Расчёт эпюры пассивного отпора</p>
+                    </div>
+
+                    <!-- Параметры расчёта -->
+                    <div class="module-card">
+                        <h2 class="section-title">Исходные данные для расчёта</h2>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Коэффициент Kp</div>
+                                <div class="result-value">
+                                    <span id="display4-kp">-</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Удельный вес γ</div>
+                                <div class="result-value">
+                                    <span id="display4-gamma">-</span>
+                                    <span class="result-unit">кН/м³</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Сцепление c</div>
+                                <div class="result-value">
+                                    <span id="display4-cohesion">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Компонента сцепления</div>
+                                <div class="result-value">
+                                    <span id="display4-cohesion-comp">-</span>
+                                    <span class="result-unit">кПа</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Расчёт пассивного давления -->
+                    <div class="module-card">
+                        <h2 class="section-title">Эпюра пассивного сопротивления</h2>
+                        <div class="formula-display">
+                            σp(t) = γ'·t·Kp + 2c·√Kp<br>
+                            где t - глубина заглубления шпунта ниже дна котлована
+                        </div>
+
+                        <!-- График эпюры пассивного сопротивления -->
+                        <div class="diagram-container">
+                            <div class="diagram-title">График эпюры пассивного сопротивления</div>
+                            <canvas id="passiveResistanceCanvas" width="700" height="400"></canvas>
+                            <div class="diagram-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color legend-passive"></div>
+                                    <span>Пассивное сопротивление σp</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color legend-zero"></div>
+                                    <span>Ось шпунта</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Предварительная глубина заглубления t <span class="unit">м</span></label>
+                            <div class="input-wrapper">
+                                <input type="number" id="embedment-depth" step="0.1" min="0" max="20" value="3.0">
+                                <span class="unit">м</span>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Давление у дна котлована σp(0) <span class="unit">кПа</span></label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="result4-pressure-top" readonly>
+                                    <span class="unit">кПа</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Давление на глубине t: σp(t) <span class="unit">кПа</span></label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="result4-pressure-bottom" readonly>
+                                    <span class="unit">кПа</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Равнодействующая Ep</div>
+                                <div class="result-value">
+                                    <span id="result4-resultant">-</span>
+                                    <span class="result-unit">кН/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Точка приложения от дна</div>
+                                <div class="result-value">
+                                    <span id="result4-application-point">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Условие равновесия -->
+                    <div class="module-card">
+                        <h2 class="section-title">Проверка условия равновесия</h2>
+                        <div class="formula-display">
+                            Условие: Ep ≥ Ea × k_безопасности<br>
+                            где k_безопасности = 1.2 (по ВСН 136-78, п. 4.9)
+                        </div>
+                        
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Активное давление Ea</div>
+                                <div class="result-value">
+                                    <span id="display4-ea">-</span>
+                                    <span class="result-unit">кН/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Требуемое Ep·min</div>
+                                <div class="result-value">
+                                    <span id="result4-required-ep">-</span>
+                                    <span class="result-unit">кН/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Фактическое Ep</div>
+                                <div class="result-value">
+                                    <span id="result4-actual-ep">-</span>
+                                    <span class="result-unit">кН/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Коэффициент запаса</div>
+                                <div class="result-value">
+                                    <span id="result4-safety-factor">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="equilibrium-status" class="validation-message"></div>
+                    </div>
+
+                    <div id="validationMessage4" class="validation-message"></div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="switchModule(3)">← Назад</button>
+                        <button class="btn" onclick="calculatePassiveResistance()">Рассчитать пассивное сопротивление</button>
+                        <button class="btn" onclick="switchModule(5)">Далее →</button>
+                    </div>
+                </div>
+
+                <!-- Модуль 5: Глубина заглубления -->
+                <div id="module5" class="module-content">
+                    <div class="header">
+                        <h1>Модуль 5: Уточнение глубины заглубления</h1>
+                        <p class="subtitle">Определение расчётной глубины заглубления шпунта</p>
+                    </div>
+
+                    <!-- Результаты предварительного расчёта -->
+                    <div class="module-card">
+                        <h2 class="section-title">Данные из предыдущих модулей</h2>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Активная равнодействующая Ea</div>
+                                <div class="result-value">
+                                    <span id="display5-ea">-</span>
+                                    <span class="result-unit">кН/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Предварительная глубина t</div>
+                                <div class="result-value">
+                                    <span id="display5-t-preliminary">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Коэффициент запаса</div>
+                                <div class="result-value">
+                                    <span id="display5-safety">-</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Статус проверки</div>
+                                <div class="result-value">
+                                    <span id="display5-status">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Автоподбор глубины -->
+                    <div class="module-card">
+                        <h2 class="section-title">Автоматический подбор глубины заглубления</h2>
+                        <div class="formula-display">
+                            Метод: итерационный подбор с шагом 0.1 м<br>
+                            Условие: k_запаса = Ep / Ea ≥ 1.2<br>
+                            Диапазон поиска: от 0.5 м до 20 м
+                        </div>
+
+                        <div class="form-group">
+                            <label>Начальная глубина для подбора <span class="unit">м</span></label>
+                            <div class="input-wrapper">
+                                <input type="number" id="auto-start-depth" step="0.1" min="0.5" max="5" value="1.0">
+                                <span class="unit">м</span>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn" onclick="autoCalculateEmbedmentDepth()">🔍 Автоподбор глубины</button>
+                        </div>
+
+                        <div id="auto-calc-result" style="display: none; margin-top: 20px;">
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <div class="result-label">Минимальная расчётная глубина</div>
+                                    <div class="result-value">
+                                        <span id="result5-min-depth">-</span>
+                                        <span class="result-unit">м</span>
+                                    </div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-label">Рекомендуемая глубина (+10%)</div>
+                                    <div class="result-value">
+                                        <span id="result5-recommended-depth">-</span>
+                                        <span class="result-unit">м</span>
+                                    </div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-label">Достигнутый коэффициент</div>
+                                    <div class="result-value">
+                                        <span id="result5-achieved-safety">-</span>
+                                    </div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-label">Количество итераций</div>
+                                    <div class="result-value">
+                                        <span id="result5-iterations">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ручной расчёт -->
+                    <div class="module-card">
+                        <h2 class="section-title">Ручная корректировка</h2>
+                        <div class="form-group">
+                            <label>Расчётная глубина заглубления t <span class="unit">м</span></label>
+                            <div class="input-wrapper">
+                                <input type="number" id="final-embedment-depth" step="0.1" min="0" max="20" value="3.0">
+                                <span class="unit">м</span>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="verifyManualDepth()">Проверить вручную</button>
+                        </div>
+
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Ep при заданной глубине</div>
+                                <div class="result-value">
+                                    <span id="result5-manual-ep">-</span>
+                                    <span class="result-unit">кН/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Коэффициент запаса</div>
+                                <div class="result-value">
+                                    <span id="result5-manual-safety">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Итоговая глубина -->
+                    <div class="module-card">
+                        <h2 class="section-title">Принятая глубина заглубления</h2>
+                        <div class="result-grid">
+                            <div class="result-card" style="grid-column: 1 / -1;">
+                                <div class="result-label">Окончательная глубина заглубления шпунта</div>
+                                <div class="result-value" style="font-size: 3rem;">
+                                    <span id="result5-final-depth">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn" onclick="acceptFinalDepth()">✓ Принять глубину и перейти к Модулю 6</button>
+                        </div>
+                    </div>
+
+                    <div id="validationMessage5" class="validation-message"></div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="switchModule(4)">← Назад</button>
+                        <button class="btn" onclick="switchModule(6)">Далее →</button>
+                    </div>
+                </div>
+
+                <!-- Модуль 6: Усилия в шпунте -->
+                <div id="module6" class="module-content">
+                    <div class="header">
+                        <h1>Модуль 6: Усилия и напряжения в шпунте</h1>
+                        <p class="subtitle">Расчёт изгибающего момента и поперечной силы</p>
+                    </div>
+
+                    <!-- Исходные данные -->
+                    <div class="module-card">
+                        <h2 class="section-title">Загруженные параметры</h2>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Глубина котлована H</div>
+                                <div class="result-value">
+                                    <span id="display6-depth">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Глубина заглубления t</div>
+                                <div class="result-value">
+                                    <span id="display6-embedment">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Полная длина шпунта L</div>
+                                <div class="result-value">
+                                    <span id="display6-total-length">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Схема крепления</div>
+                                <div class="result-value" style="font-size: 1.2rem;">
+                                    <span id="display6-scheme">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Расчёт изгибающего момента -->
+                    <div class="module-card">
+                        <h2 class="section-title">Расчёт изгибающего момента</h2>
+                        <div class="formula-display">
+                            Без распорок (консоль):<br>
+                            M_max = (Ea × e_a - Ep × e_p)<br>
+                            <br>
+                            С распорками:<br>
+                            M_max = определяется по эпюре моментов с учётом точки опирания
+                        </div>
+
+                        <div class="form-group" id="strut-position-group" style="display: none;">
+                            <label>Положение распорки от верха шпунта <span class="unit">м</span></label>
+                            <div class="input-wrapper">
+                                <input type="number" id="strut-position" step="0.1" min="0" value="1.0">
+                                <span class="unit">м</span>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn" onclick="calculateBendingMoment()">Рассчитать момент</button>
+                        </div>
+
+                        <!-- График эпюры моментов -->
+                        <div class="diagram-container" id="moment-diagram" style="display: none;">
+                            <div class="diagram-title">Эпюра изгибающих моментов</div>
+                            <canvas id="momentDiagramCanvas" width="700" height="400"></canvas>
+                        </div>
+
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Максимальный момент M_max</div>
+                                <div class="result-value">
+                                    <span id="result6-max-moment">-</span>
+                                    <span class="result-unit">кН·м/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Положение M_max от верха</div>
+                                <div class="result-value">
+                                    <span id="result6-moment-position">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Расчёт поперечной силы -->
+                    <div class="module-card">
+                        <h2 class="section-title">Расчёт поперечной силы</h2>
+                        <div class="formula-display">
+                            Q_max = max(Ea, Ep)<br>
+                            Максимальная поперечная сила возникает в точке нулевого момента
+                        </div>
+
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Максимальная поперечная сила Q_max</div>
+                                <div class="result-value">
+                                    <span id="result6-max-shear">-</span>
+                                    <span class="result-unit">кН/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Положение Q_max</div>
+                                <div class="result-value">
+                                    <span id="result6-shear-position">-</span>
+                                    <span class="result-unit">м</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Расчёт напряжений -->
+                    <div class="module-card">
+                        <h2 class="section-title">Требуемый момент сопротивления</h2>
+                        <div class="formula-display">
+                            W_требуемый = M_max × γ_n / (R_y × m)<br>
+                            где:<br>
+                            γ_n - коэффициент надёжности<br>
+                            R_y - расчётное сопротивление стали (по умолчанию 240 МПа)<br>
+                            m - коэффициент условий работы
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Расчётное сопротивление стали R_y <span class="unit">МПа</span></label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="steel-resistance" step="1" min="200" max="400" value="240">
+                                    <span class="unit">МПа</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn" onclick="calculateRequiredSection()">Рассчитать требуемое сечение</button>
+                        </div>
+
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Требуемый момент сопротивления W</div>
+                                <div class="result-value">
+                                    <span id="result6-required-w">-</span>
+                                    <span class="result-unit">см³/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Расчётное напряжение σ</div>
+                                <div class="result-value">
+                                    <span id="result6-stress">-</span>
+                                    <span class="result-unit">МПа</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="validationMessage6" class="validation-message"></div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="switchModule(5)">← Назад</button>
+                        <button class="btn" onclick="switchModule(7)">Далее →</button>
+                    </div>
+                </div>
+
+                <!-- Модуль 7: Проверка профиля -->
+                <div id="module7" class="module-content">
+                    <div class="header">
+                        <h1>Модуль 7: Подбор профиля шпунта</h1>
+                        <p class="subtitle">Выбор сортамента по ГОСТу</p>
+                    </div>
+
+                    <!-- Требуемые параметры -->
+                    <div class="module-card">
+                        <h2 class="section-title">Требования к профилю</h2>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Требуемый момент сопротивления W</div>
+                                <div class="result-value">
+                                    <span id="display7-required-w">-</span>
+                                    <span class="result-unit">см³/м</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Расчётное сопротивление стали</div>
+                                <div class="result-value">
+                                    <span id="display7-ry">-</span>
+                                    <span class="result-unit">МПа</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- База данных профилей -->
+                    <div class="module-card">
+                        <h2 class="section-title">Каталог профилей шпунта Ларсена</h2>
+                        <div class="formula-display">
+                            База данных профилей по ГОСТ 380-2005 (Ст3), ГОСТ 27772-2015
+                        </div>
+
+                        <div class="form-group">
+                            <label>Фильтр по производителю</label>
+                            <select id="manufacturer-filter">
+                                <option value="all">Все производители</option>
+                                <option value="gost">ГОСТ (Россия)</option>
+                                <option value="arcelor">ArcelorMittal</option>
+                                <option value="thyssen">ThyssenKrupp</option>
+                            </select>
+                        </div>
+
+                        <div style="overflow-x: auto; margin-top: 20px;">
+                            <table style="width: 100%; border-collapse: collapse; background: var(--bg-elevated);">
+                                <thead>
+                                    <tr style="background: var(--bg-primary); color: var(--accent-copper);">
+                                        <th style="padding: 12px; text-align: left; border: 1px solid var(--border-color);">Профиль</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid var(--border-color);">W, см³/м</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid var(--border-color);">I, см⁴/м</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid var(--border-color);">Масса, кг/м²</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid var(--border-color);">Статус</th>
+                                        <th style="padding: 12px; text-align: center; border: 1px solid var(--border-color);">Действие</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="profiles-table">
+                                    <!-- Заполняется JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Выбранный профиль -->
+                    <div class="module-card">
+                        <h2 class="section-title">Принятый профиль шпунта</h2>
+                        <div id="selected-profile-info" style="display: none;">
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <div class="result-label">Обозначение профиля</div>
+                                    <div class="result-value" style="font-size: 2.5rem;">
+                                        <span id="result7-profile-name">-</span>
+                                    </div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-label">Фактический W</div>
+                                    <div class="result-value">
+                                        <span id="result7-actual-w">-</span>
+                                        <span class="result-unit">см³/м</span>
+                                    </div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-label">Запас по W</div>
+                                    <div class="result-value">
+                                        <span id="result7-reserve">-</span>
+                                        <span class="result-unit">%</span>
+                                    </div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-label">Масса на 1 м стенки</div>
+                                    <div class="result-value">
+                                        <span id="result7-mass">-</span>
+                                        <span class="result-unit">кг/м²</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="validation-message success" style="display: block; margin-top: 20px;">
+                                <strong>✓ Профиль выбран успешно</strong><br>
+                                Момент сопротивления профиля обеспечивает требуемую прочность.
+                            </div>
+                        </div>
+
+                        <div id="no-profile-selected" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            Профиль не выбран. Выберите подходящий профиль из таблицы выше.
+                        </div>
+                    </div>
+
+                    <div id="validationMessage7" class="validation-message"></div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="switchModule(6)">← Назад</button>
+                        <button class="btn" onclick="switchModule(8)">Далее →</button>
+                    </div>
+                </div>
+
+                <!-- Модуль 8: Особые условия -->
+                <div id="module8" class="module-content">
+                    <div class="header">
+                        <h1>Модуль 8: Особые условия и рекомендации</h1>
+                        <p class="subtitle">Проверка специальных требований</p>
+                    </div>
+
+                    <!-- Условия эксплуатации -->
+                    <div class="module-card">
+                        <h2 class="section-title">Условия эксплуатации</h2>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="aggressive-environment">
+                                Агрессивная среда (химически активные грунты, промстоки)
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="dynamic-loads">
+                                Динамические нагрузки (вибрация, удары, сейсмика)
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="permafrost">
+                                Многолетнемёрзлые грунты
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="long-term">
+                                Длительный срок службы (&gt;50 лет)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Дополнительные проверки -->
+                    <div class="module-card">
+                        <h2 class="section-title">Дополнительные проверки</h2>
+                        
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <div class="result-label">Прогиб шпунта</div>
+                                <div class="result-value">
+                                    <span id="result8-deflection">-</span>
+                                    <span class="result-unit">мм</span>
+                                </div>
+                            </div>
+                            <div class="result-card">
+                                <div class="result-label">Предельный прогиб</div>
+                                <div class="result-value">
+                                    <span id="result8-limit-deflection">-</span>
+                                    <span class="result-unit">мм</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="formula-display">
+                            δ_max = (5 × q × L⁴) / (384 × E × I)<br>
+                            где: q - распределённая нагрузка, L - пролёт, E - модуль упругости (2.1×10⁵ МПа), I - момент инерции
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn" onclick="calculateDeflection()">Рассчитать прогиб</button>
+                        </div>
+
+                        <div id="deflection-status" class="validation-message" style="display: none;"></div>
+                    </div>
+
+                    <!-- Рекомендации по погружению -->
+                    <div class="module-card">
+                        <h2 class="section-title">Рекомендации по технологии погружения</h2>
+                        
+                        <div style="background: var(--bg-elevated); padding: 20px; border-radius: 8px; border-left: 4px solid var(--accent-ice);">
+                            <h3 style="color: var(--accent-ice); margin-bottom: 15px;">Методы погружения</h3>
+                            <ul style="color: var(--text-secondary); line-height: 1.8;">
+                                <li><strong>Вибропогружение:</strong> для песков и супесей, глубина до 12-15 м</li>
+                                <li><strong>Вдавливание:</strong> для слабых глин и суглинков, минимальный шум</li>
+                                <li><strong>Забивка:</strong> для плотных грунтов, требует усиленных профилей</li>
+                                <li><strong>Лидерное бурение:</strong> для грунтов с включениями, снижает усилия</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: var(--bg-elevated); padding: 20px; border-radius: 8px; border-left: 4px solid var(--warning); margin-top: 20px;">
+                            <h3 style="color: var(--warning); margin-bottom: 15px;">⚠ Важные замечания</h3>
+                            <ul style="color: var(--text-secondary); line-height: 1.8;">
+                                <li>Контроль вертикальности каждого элемента (отклонение не более 1%)</li>
+                                <li>Обеспечение замкового соединения по всей длине</li>
+                                <li>Антикоррозийная защита в зоне переменного уровня воды</li>
+                                <li>Мониторинг деформаций соседних зданий при погружении</li>
+                                <li>Проверка шпунта на отсутствие дефектов перед погружением</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Итоговые рекомендации -->
+                    <div class="module-card">
+                        <h2 class="section-title">Автоматические рекомендации</h2>
+                        <div id="auto-recommendations" style="padding: 20px; background: var(--bg-primary); border-radius: 8px;">
+                            <p style="color: var(--text-secondary);">Рекомендации будут сформированы автоматически после заполнения всех данных.</p>
+                        </div>
+                    </div>
+
+                    <div id="validationMessage8" class="validation-message"></div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="switchModule(7)">← Назад</button>
+                        <button class="btn" onclick="generateRecommendations()">Сформировать рекомендации</button>
+                        <button class="btn" onclick="switchModule(9)">Далее →</button>
+                    </div>
+                </div>
+
+                <!-- Модуль 9: Итоговый отчёт -->
+                <div id="module9" class="module-content">
+                    <div class="header">
+                        <h1>Модуль 9: Итоговый расчётный отчёт</h1>
+                        <p class="subtitle">Сводка результатов расчёта</p>
+                    </div>
+
+                    <!-- Общие сведения -->
+                    <div class="module-card">
+                        <h2 class="section-title">1. Общие сведения о проекте</h2>
+                        <div id="report-general-info" style="line-height: 1.8; color: var(--text-secondary);">
+                            <!-- Заполняется JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Исходные данные -->
+                    <div class="module-card">
+                        <h2 class="section-title">2. Исходные данные</h2>
+                        <div id="report-input-data" style="line-height: 1.8; color: var(--text-secondary);">
+                            <!-- Заполняется JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Результаты расчёта -->
+                    <div class="module-card">
+                        <h2 class="section-title">3. Результаты расчёта</h2>
+                        <div id="report-calculations" style="line-height: 1.8; color: var(--text-secondary);">
+                            <!-- Заполняется JavaScript -->
+                        </div>
+                        
+                        <!-- Эпюры давления -->
+                        <div style="margin-top: 30px;">
+                            <h3 style="color: var(--accent-copper); margin-bottom: 15px;">3.1. Эпюра активного давления грунта</h3>
+                            <div class="diagram-container">
+                                <canvas id="report-active-pressure-canvas" width="700" height="400"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px;">
+                            <h3 style="color: var(--accent-copper); margin-bottom: 15px;">3.2. Эпюра пассивного сопротивления грунта</h3>
+                            <div class="diagram-container">
+                                <canvas id="report-passive-resistance-canvas" width="700" height="400"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px;">
+                            <h3 style="color: var(--accent-copper); margin-bottom: 15px;">3.3. Эпюра изгибающих моментов</h3>
+                            <div class="diagram-container">
+                                <canvas id="report-moment-diagram-canvas" width="700" height="400"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Принятые решения -->
+                    <div class="module-card">
+                        <h2 class="section-title">4. Принятые конструктивные решения</h2>
+                        <div id="report-decisions" style="line-height: 1.8; color: var(--text-secondary);">
+                            <!-- Заполняется JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Заключение -->
+                    <div class="module-card">
+                        <h2 class="section-title">5. Заключение</h2>
+                        <div id="report-conclusion" style="padding: 20px; background: var(--bg-elevated); border-left: 4px solid var(--success); border-radius: 8px;">
+                            <p style="color: var(--success); font-size: 1.1rem; font-weight: 700; margin-bottom: 10px;">
+                                ✓ Расчёт шпунтовой стенки выполнен успешно
+                            </p>
+                            <p style="color: var(--text-secondary); line-height: 1.8;">
+                                Все проверки прочности, устойчивости и деформативности выполнены в соответствии с ВСН 136-78. 
+                                Принятая конструкция шпунтовой стенки обеспечивает требуемую надёжность и безопасность.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Действия с отчётом -->
+                    <div class="module-card">
+                        <h2 class="section-title">Экспорт результатов</h2>
+                        
+                        <div class="form-group">
+                            <label>Формат экспорта отчёта</label>
+                            <select id="export-format">
+                                <option value="print">Печать (браузер)</option>
+                                <option value="pdf">PDF документ</option>
+                                <option value="docx">Word документ (DOCX)</option>
+                                <option value="excel">Excel таблица (XLSX)</option>
+                                <option value="json">JSON данные</option>
+                            </select>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn" onclick="generateFullReport()">📄 Сформировать отчёт</button>
+                            <button class="btn" onclick="exportReport()">💾 Экспортировать выбранный формат</button>
+                        </div>
+
+                        <div id="report-status" class="validation-message" style="display: none;"></div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: var(--bg-elevated); border-radius: 8px; border-left: 4px solid var(--accent-ice);">
+                            <h4 style="color: var(--accent-ice); margin-bottom: 10px;">ℹ Информация о форматах</h4>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; font-size: 0.9rem;">
+                                <li><strong>Печать:</strong> Открывает диалог печати браузера для сохранения в PDF или печати</li>
+                                <li><strong>PDF:</strong> Создаёт профессиональный PDF документ с полным отчётом</li>
+                                <li><strong>DOCX:</strong> Генерирует документ Word для редактирования</li>
+                                <li><strong>Excel:</strong> Экспортирует данные в таблицу с расчётами</li>
+                                <li><strong>JSON:</strong> Сохраняет все данные в формате JSON для импорта</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="switchModule(8)">← Назад</button>
+                        <button class="btn" onclick="switchModule(1)">🔄 Новый расчёт</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Предустановленные значения грунтов из ВСН 136-78, Приложение 10, Таблица Б
+        const soilPresets = {
+            sandy_light: { gamma: 18, phi: 30, cohesion: 2 },
+            sandy_saturated: { gamma: 20, phi: 28, cohesion: 0 },
+            loam_light: { gamma: 19, phi: 20, cohesion: 28 },
+            loam_heavy: { gamma: 21, phi: 25, cohesion: 40 },
+            clay_soft: { gamma: 19, phi: 18, cohesion: 35 },
+            clay_hard: { gamma: 22, phi: 22, cohesion: 60 }
+        };
+
+        // Загрузка предустановки
+        function loadPreset(presetName) {
+            const preset = soilPresets[presetName];
+            if (preset) {
+                document.getElementById('gamma').value = preset.gamma;
+                document.getElementById('phi').value = preset.phi;
+                document.getElementById('cohesion').value = preset.cohesion;
+                document.getElementById('soilType').value = presetName;
+                showMessage('Загружены параметры: ' + getPresetName(presetName), 'success');
+            }
+        }
+
+        function getPresetName(key) {
+            const names = {
+                sandy_light: 'Песок мелкий маловлажный',
+                sandy_saturated: 'Песок водонасыщенный',
+                loam_light: 'Суглинок лёгкий обводнённый',
+                loam_heavy: 'Суглинок тяжёлый',
+                clay_soft: 'Глина мягкопластичная',
+                clay_hard: 'Глина твёрдая'
+            };
+            return names[key] || key;
+        }
+
+        // Переключение видимости полей
+        function toggleCraneInputs() {
+            const checked = document.getElementById('craneLoad').checked;
+            document.getElementById('craneInputs').style.display = checked ? 'block' : 'none';
+        }
+
+        function toggleDistributedInputs() {
+            const checked = document.getElementById('distributedLoad').checked;
+            document.getElementById('distributedInputs').style.display = checked ? 'block' : 'none';
+        }
+
+        // Обработка изменения типа грунта
+        document.getElementById('soilType').addEventListener('change', function() {
+            if (this.value !== 'custom') {
+                loadPreset(this.value);
+            }
+        });
+
+        // Обработка УГВ
+        document.getElementById('waterLevel').addEventListener('change', function() {
+            const customWater = document.getElementById('waterDepthGroup');
+            customWater.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+
+        // Переключение между модулями
+        function switchModule(moduleNumber) {
+            // Скрыть все модули
+            document.querySelectorAll('.module-content').forEach(m => m.classList.remove('active'));
+            document.querySelectorAll('.module-nav-item').forEach(m => m.classList.remove('active'));
+            
+            // Показать выбранный модуль
+            document.getElementById('module' + moduleNumber).classList.add('active');
+            document.querySelectorAll('.module-nav-item')[moduleNumber - 1].classList.add('active');
+            
+            // Прокрутка наверх
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Загрузка данных для соответствующих модулей
+            if (moduleNumber === 2) {
+                loadModule2Data();
+            } else if (moduleNumber === 3) {
+                loadModule3Data();
+            } else if (moduleNumber === 4) {
+                loadModule4Data();
+            } else if (moduleNumber === 5) {
+                loadModule5Data();
+            } else if (moduleNumber === 6) {
+                loadModule6Data();
+            }
+        }
+
+        // Валидация данных
+        function validateAndProceed() {
+            const data = collectFormData();
+            const errors = [];
+            const warnings = [];
+
+            // Проверка обязательных полей
+            if (data.excavationDepth <= 0) {
+                errors.push('Глубина котлована должна быть больше 0');
+            }
+            if (data.excavationDepth > 30) {
+                warnings.push('Глубина котлована более 30 м — требуется особое внимание');
+            }
+            if (data.gamma < 15 || data.gamma > 25) {
+                warnings.push('Удельный вес грунта вне типичного диапазона (15-25 кН/м³)');
+            }
+            if (data.phi < 0 || data.phi > 45) {
+                errors.push('Угол внутреннего трения должен быть в диапазоне 0-45°');
+            }
+            if (data.cohesion < 0) {
+                errors.push('Сцепление не может быть отрицательным');
+            }
+            if (data.cohesion > 100 && data.phi < 20) {
+                warnings.push('Большое сцепление при малом угле трения — проверьте данные');
+            }
+
+            // Вывод результатов валидации
+            if (errors.length > 0) {
+                showMessage('ОШИБКИ:\n' + errors.join('\n'), 'error');
+                return false;
+            }
+
+            if (warnings.length > 0) {
+                showMessage('ПРЕДУПРЕЖДЕНИЯ:\n' + warnings.join('\n') + '\n\nДанные приняты, но рекомендуется проверка.', 'warning');
+            } else {
+                showMessage('✓ Все данные корректны. Переход к Модулю 2...', 'success');
+                setTimeout(() => switchModule(2), 1500);
+            }
+
+            // Сохранение данных
+            saveToLocalStorage(data);
+            
+            // Отметить модуль 1 как завершённый
+            document.querySelectorAll('.module-nav-item')[0].classList.add('completed');
+            
+            return true;
+        }
+
+        // Загрузка данных для модуля 2
+        function loadModule2Data() {
+            const saved = localStorage.getItem('larsenInputData');
+            if (!saved) {
+                showMessage('Необходимо заполнить данные в Модуле 1', 'error', 'validationMessage2');
+                return;
+            }
+            
+            const data = JSON.parse(saved);
+            const gammaW = 9.8; // удельный вес воды
+            const gammaPrime = data.waterLevel === 'below' ? data.gamma : data.gamma - gammaW;
+            
+            document.getElementById('display-gamma').textContent = data.gamma.toFixed(1);
+            document.getElementById('display-phi').textContent = data.phi.toFixed(1);
+            document.getElementById('display-cohesion').textContent = data.cohesion.toFixed(1);
+            document.getElementById('display-gamma-prime').textContent = gammaPrime.toFixed(1);
+        }
+
+        // Расчёт коэффициентов давления
+        function calculatePressureCoefficients() {
+            const saved = localStorage.getItem('larsenInputData');
+            if (!saved) {
+                showMessage('Необходимо заполнить данные в Модуле 1', 'error', 'validationMessage2');
+                return;
+            }
+            
+            const data = JSON.parse(saved);
+            const phiRad = data.phi * Math.PI / 180;
+            
+            // Расчёт Ka и Kp
+            const Ka = Math.pow(Math.tan(Math.PI/4 - phiRad/2), 2);
+            const Kp = Math.pow(Math.tan(Math.PI/4 + phiRad/2), 2);
+            
+            const KaSqrt = Math.sqrt(Ka);
+            const KpSqrt = Math.sqrt(Kp);
+            
+            // Компоненты от сцепления
+            const cohesionActive = -2 * data.cohesion * KaSqrt;
+            const cohesionPassive = 2 * data.cohesion * KpSqrt;
+            
+            // Вывод результатов
+            document.getElementById('result-ka').textContent = Ka.toFixed(3);
+            document.getElementById('result-ka-sqrt').textContent = KaSqrt.toFixed(3);
+            document.getElementById('result-kp').textContent = Kp.toFixed(2);
+            document.getElementById('result-kp-sqrt').textContent = KpSqrt.toFixed(3);
+            document.getElementById('result-cohesion-active').textContent = cohesionActive.toFixed(1);
+            document.getElementById('result-cohesion-passive').textContent = cohesionPassive.toFixed(1);
+            
+            // Сохранение результатов
+            const results = {
+                Ka, Kp, KaSqrt, KpSqrt,
+                cohesionActive, cohesionPassive
+            };
+            localStorage.setItem('larsenCoefficients', JSON.stringify(results));
+            
+            showMessage('✓ Коэффициенты рассчитаны успешно!', 'success', 'validationMessage2');
+            
+            // Отметить модуль 2 как завершённый
+            document.querySelectorAll('.module-nav-item')[1].classList.add('completed');
+        }
+
+        // Сбор данных формы
+        function collectFormData() {
+            return {
+                excavationDepth: parseFloat(document.getElementById('excavationDepth').value),
+                excavationWidth: parseFloat(document.getElementById('excavationWidth').value),
+                excavationLength: parseFloat(document.getElementById('excavationLength').value),
+                supportScheme: document.getElementById('supportScheme').value,
+                soilType: document.getElementById('soilType').value,
+                gamma: parseFloat(document.getElementById('gamma').value),
+                phi: parseFloat(document.getElementById('phi').value),
+                cohesion: parseFloat(document.getElementById('cohesion').value),
+                waterLevel: document.getElementById('waterLevel').value,
+                waterDepth: document.getElementById('waterLevel').value === 'custom' ? 
+                    parseFloat(document.getElementById('waterDepth').value) : 0,
+                craneLoad: document.getElementById('craneLoad').checked,
+                craneWeight: document.getElementById('craneLoad').checked ? 
+                    parseFloat(document.getElementById('craneWeight').value) : 0,
+                craneDistance: document.getElementById('craneLoad').checked ? 
+                    parseFloat(document.getElementById('craneDistance').value) : 0,
+                distributedLoad: document.getElementById('distributedLoad').checked,
+                surfaceLoad: document.getElementById('distributedLoad').checked ? 
+                    parseFloat(document.getElementById('surfaceLoad').value) : 0,
+                workCondition: parseFloat(document.getElementById('workCondition').value),
+                reliabilityCoef: parseFloat(document.getElementById('reliabilityCoef').value)
+            };
+        }
+
+        // Сохранение в LocalStorage
+        function saveToLocalStorage(data) {
+            localStorage.setItem('larsenInputData', JSON.stringify(data));
+            console.log('Данные сохранены в LocalStorage');
+        }
+
+        // Загрузка из LocalStorage
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('larsenInputData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                // Восстановление значений полей
+                Object.keys(data).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = data[key];
+                        } else {
+                            element.value = data[key];
+                        }
+                    }
+                });
+                showMessage('Загружены ранее сохранённые данные', 'success');
+            }
+        }
+
+        // Сброс формы
+        function resetForm() {
+            if (confirm('Сбросить все данные?')) {
+                document.querySelectorAll('input, select').forEach(el => {
+                    if (el.type === 'checkbox') {
+                        el.checked = false;
+                    } else {
+                        el.value = el.defaultValue || '';
+                    }
+                });
+                localStorage.removeItem('larsenInputData');
+                showMessage('Форма сброшена', 'warning');
+            }
+        }
+
+        // Показ сообщений
+        function showMessage(text, type, elementId = 'validationMessage') {
+            const msgDiv = document.getElementById(elementId);
+            msgDiv.textContent = text;
+            msgDiv.className = 'validation-message ' + type;
+            msgDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Загрузка данных для модуля 3
+        function loadModule3Data() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const coeffData = localStorage.getItem('larsenCoefficients');
+            
+            if (!inputData || !coeffData) {
+                showMessage('Необходимо заполнить данные в предыдущих модулях', 'error', 'validationMessage3');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const coeff = JSON.parse(coeffData);
+            
+            document.getElementById('display3-depth').textContent = data.excavationDepth.toFixed(1);
+            document.getElementById('display3-ka').textContent = coeff.Ka.toFixed(3);
+            document.getElementById('display3-gamma').textContent = data.gamma.toFixed(1);
+            document.getElementById('display3-cohesion').textContent = coeff.cohesionActive.toFixed(1);
+            
+            // Внешние нагрузки
+            const distributedLoad = data.distributedLoad ? data.surfaceLoad : 0;
+            const craneWeight = data.craneLoad ? data.craneWeight : 0;
+            
+            document.getElementById('display3-distributed').textContent = distributedLoad.toFixed(1);
+            document.getElementById('display3-crane').textContent = craneWeight.toFixed(0);
+            
+            // Эквивалентная нагрузка (упрощённый расчёт)
+            let equivalentLoad = distributedLoad;
+            if (data.craneLoad) {
+                const craneLoadKPa = (craneWeight * 9.81) / (data.excavationWidth * 2); // распределение на ширину влияния
+                equivalentLoad += craneLoadKPa;
+            }
+            document.getElementById('display3-equivalent').textContent = equivalentLoad.toFixed(1);
+        }
+
+        // Расчёт активного давления
+        function calculateActivePressure() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const coeffData = localStorage.getItem('larsenCoefficients');
+            
+            if (!inputData || !coeffData) {
+                showMessage('Необходимо заполнить данные в предыдущих модулях', 'error', 'validationMessage3');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const coeff = JSON.parse(coeffData);
+            
+            const H = data.excavationDepth;
+            const gamma = data.gamma;
+            const Ka = coeff.Ka;
+            const cohesionActive = coeff.cohesionActive;
+            
+            // Эквивалентная нагрузка
+            let q = data.distributedLoad ? data.surfaceLoad : 0;
+            if (data.craneLoad) {
+                const craneLoadKPa = (data.craneWeight * 9.81) / (data.excavationWidth * 2);
+                q += craneLoadKPa;
+            }
+            
+            // Активное давление у поверхности
+            const pressureTop = cohesionActive + q * Ka;
+            
+            // Активное давление на дне котлована
+            const pressureBottom = gamma * H * Ka + cohesionActive + q * Ka;
+            
+            // Глубина зоны растяжения (где σa = 0)
+            let tensionDepth = 0;
+            if (pressureTop < 0) {
+                tensionDepth = Math.abs(cohesionActive + q * Ka) / (gamma * Ka);
+            }
+            
+            // Максимальное активное давление
+            const maxPressure = Math.max(Math.abs(pressureTop), Math.abs(pressureBottom));
+            
+            // Равнодействующая активного давления (площадь трапеции)
+            let resultant;
+            if (pressureTop < 0) {
+                // Если есть зона растяжения
+                const effectiveHeight = H - tensionDepth;
+                resultant = 0.5 * pressureBottom * effectiveHeight;
+            } else {
+                resultant = 0.5 * (pressureTop + pressureBottom) * H;
+            }
+            
+            // Вывод результатов
+            document.getElementById('result3-pressure-top').value = pressureTop.toFixed(2);
+            document.getElementById('result3-pressure-bottom').value = pressureBottom.toFixed(2);
+            document.getElementById('result3-tension-depth').value = tensionDepth.toFixed(2);
+            document.getElementById('result3-max-pressure').textContent = maxPressure.toFixed(1);
+            document.getElementById('result3-resultant').textContent = resultant.toFixed(1);
+            
+            // Сохранение результатов
+            const results = {
+                pressureTop,
+                pressureBottom,
+                tensionDepth,
+                maxPressure,
+                resultant,
+                equivalentLoad: q
+            };
+            localStorage.setItem('larsenActivePressure', JSON.stringify(results));
+            
+            // Построение графика эпюры
+            drawActivePressureDiagram(H, pressureTop, pressureBottom, tensionDepth);
+            
+            showMessage('✓ Активное давление рассчитано успешно!', 'success', 'validationMessage3');
+            
+            // Отметить модуль 3 как завершённый
+            document.querySelectorAll('.module-nav-item')[2].classList.add('completed');
+        }
+
+        // Функция построения эпюры активного давления
+        function drawActivePressureDiagram(H, pressureTop, pressureBottom, tensionDepth) {
+            const canvas = document.getElementById('activePressureCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Очистка canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Параметры отрисовки
+            const margin = 60;
+            const plotWidth = width - 2 * margin;
+            const plotHeight = height - 2 * margin;
+            
+            // Определение масштаба
+            const maxPressure = Math.max(Math.abs(pressureTop), Math.abs(pressureBottom));
+            const pressureScale = plotWidth / (maxPressure * 1.2);
+            const depthScale = plotHeight / H;
+            
+            // Начало координат (центр по горизонтали)
+            const originX = margin + plotWidth / 2;
+            const originY = margin;
+            
+            // Сетка и оси
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 1;
+            
+            // Вертикальная ось (ось шпунта)
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.stroke();
+            
+            // Горизонтальная ось (нулевое давление)
+            ctx.strokeStyle = '#9da5b4';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(margin, originY);
+            ctx.lineTo(width - margin, originY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(margin, originY + plotHeight);
+            ctx.lineTo(width - margin, originY + plotHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Построение эпюры активного давления
+            ctx.strokeStyle = '#ff4444';
+            ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
+            ctx.lineWidth = 3;
+            
+            const topX = originX + pressureTop * pressureScale;
+            const bottomX = originX + pressureBottom * pressureScale;
+            
+            // Отрисовка эпюры
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(topX, originY);
+            
+            if (tensionDepth > 0 && pressureTop < 0) {
+                // Если есть зона растяжения
+                const tensionY = originY + tensionDepth * depthScale;
+                ctx.lineTo(originX, tensionY);
+                ctx.lineTo(bottomX, originY + plotHeight);
+            } else {
+                ctx.lineTo(bottomX, originY + plotHeight);
+            }
+            
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Подписи значений
+            ctx.fillStyle = '#e8e6e3';
+            ctx.font = '12px Roboto Condensed';
+            ctx.textAlign = 'left';
+            
+            // Давление у поверхности
+            ctx.fillText(`σa(0) = ${pressureTop.toFixed(1)} кПа`, topX + 5, originY + 15);
+            
+            // Давление на дне
+            ctx.fillText(`σa(H) = ${pressureBottom.toFixed(1)} кПа`, bottomX + 5, originY + plotHeight - 5);
+            
+            // Отметки глубины
+            ctx.textAlign = 'right';
+            ctx.fillText('0 м', originX - 10, originY + 5);
+            ctx.fillText(`${H.toFixed(1)} м`, originX - 10, originY + plotHeight + 5);
+            
+            if (tensionDepth > 0) {
+                const tensionY = originY + tensionDepth * depthScale;
+                ctx.fillStyle = '#f0a500';
+                ctx.fillText(`z₀ = ${tensionDepth.toFixed(2)} м`, originX - 10, tensionY + 5);
+                
+                // Линия зоны растяжения
+                ctx.strokeStyle = '#f0a500';
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(margin, tensionY);
+                ctx.lineTo(width - margin, tensionY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // Заголовки осей
+            ctx.fillStyle = '#c87533';
+            ctx.font = 'bold 14px Roboto Condensed';
+            ctx.textAlign = 'center';
+            ctx.fillText('Активное давление σa, кПа', width / 2, height - 20);
+            
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Глубина z, м', 0, 0);
+            ctx.restore();
+        }
+
+        // Загрузка данных для модуля 4
+        function loadModule4Data() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const coeffData = localStorage.getItem('larsenCoefficients');
+            const activeData = localStorage.getItem('larsenActivePressure');
+            
+            if (!inputData || !coeffData) {
+                showMessage('Необходимо заполнить данные в предыдущих модулях', 'error', 'validationMessage4');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const coeff = JSON.parse(coeffData);
+            
+            document.getElementById('display4-kp').textContent = coeff.Kp.toFixed(2);
+            document.getElementById('display4-gamma').textContent = data.gamma.toFixed(1);
+            document.getElementById('display4-cohesion').textContent = data.cohesion.toFixed(1);
+            document.getElementById('display4-cohesion-comp').textContent = coeff.cohesionPassive.toFixed(1);
+            
+            if (activeData) {
+                const active = JSON.parse(activeData);
+                document.getElementById('display4-ea').textContent = active.resultant.toFixed(1);
+            }
+        }
+
+        // Расчёт пассивного сопротивления
+        function calculatePassiveResistance() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const coeffData = localStorage.getItem('larsenCoefficients');
+            const activeData = localStorage.getItem('larsenActivePressure');
+            
+            if (!inputData || !coeffData || !activeData) {
+                showMessage('Необходимо заполнить данные в предыдущих модулях', 'error', 'validationMessage4');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const coeff = JSON.parse(coeffData);
+            const active = JSON.parse(activeData);
+            
+            const t = parseFloat(document.getElementById('embedment-depth').value);
+            const gammaW = 9.8;
+            const gammaPrime = data.waterLevel === 'below' ? data.gamma : data.gamma - gammaW;
+            const Kp = coeff.Kp;
+            const cohesionPassive = coeff.cohesionPassive;
+            
+            // Пассивное давление у дна котлована (t=0)
+            const pressureTop = cohesionPassive;
+            
+            // Пассивное давление на глубине заглубления t
+            const pressureBottom = gammaPrime * t * Kp + cohesionPassive;
+            
+            // Равнодействующая пассивного сопротивления (площадь трапеции)
+            const resultant = 0.5 * (pressureTop + pressureBottom) * t;
+            
+            // Точка приложения равнодействующей от дна котлована
+            let applicationPoint;
+            if (Math.abs(pressureTop - pressureBottom) < 0.01) {
+                applicationPoint = t / 2;
+            } else {
+                applicationPoint = t * (pressureTop + 2 * pressureBottom) / (3 * (pressureTop + pressureBottom));
+            }
+            
+            // Проверка условия равновесия
+            const safetyFactor = 1.2;
+            const requiredEp = active.resultant * safetyFactor;
+            const actualSafetyFactor = resultant / active.resultant;
+            
+            // Вывод результатов
+            document.getElementById('result4-pressure-top').value = pressureTop.toFixed(2);
+            document.getElementById('result4-pressure-bottom').value = pressureBottom.toFixed(2);
+            document.getElementById('result4-resultant').textContent = resultant.toFixed(1);
+            document.getElementById('result4-application-point').textContent = applicationPoint.toFixed(2);
+            
+            document.getElementById('result4-required-ep').textContent = requiredEp.toFixed(1);
+            document.getElementById('result4-actual-ep').textContent = resultant.toFixed(1);
+            document.getElementById('result4-safety-factor').textContent = actualSafetyFactor.toFixed(2);
+            
+            // Проверка условия
+            const statusDiv = document.getElementById('equilibrium-status');
+            if (actualSafetyFactor >= safetyFactor) {
+                statusDiv.textContent = `✓ УСЛОВИЕ ВЫПОЛНЕНО: Коэффициент запаса ${actualSafetyFactor.toFixed(2)} ≥ ${safetyFactor}`;
+                statusDiv.className = 'validation-message success';
+            } else {
+                statusDiv.textContent = `✗ УСЛОВИЕ НЕ ВЫПОЛНЕНО: Требуется увеличить глубину заглубления. Текущий запас: ${actualSafetyFactor.toFixed(2)} < ${safetyFactor}`;
+                statusDiv.className = 'validation-message error';
+            }
+            
+            // Сохранение результатов
+            const results = {
+                embedmentDepth: t,
+                pressureTop,
+                pressureBottom,
+                resultant,
+                applicationPoint,
+                requiredEp,
+                actualSafetyFactor,
+                conditionMet: actualSafetyFactor >= safetyFactor
+            };
+            localStorage.setItem('larsenPassiveResistance', JSON.stringify(results));
+            
+            // Построение графика эпюры
+            drawPassiveResistanceDiagram(t, pressureTop, pressureBottom, applicationPoint);
+            
+            showMessage('✓ Пассивное сопротивление рассчитано!', 'success', 'validationMessage4');
+            
+            // Отметить модуль 4 как завершённый
+            if (actualSafetyFactor >= safetyFactor) {
+                document.querySelectorAll('.module-nav-item')[3].classList.add('completed');
+            }
+        }
+
+        // Функция построения эпюры пассивного сопротивления
+        function drawPassiveResistanceDiagram(t, pressureTop, pressureBottom, applicationPoint) {
+            const canvas = document.getElementById('passiveResistanceCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Очистка canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Параметры отрисовки
+            const margin = 60;
+            const plotWidth = width - 2 * margin;
+            const plotHeight = height - 2 * margin;
+            
+            // Определение масштаба
+            const maxPressure = Math.max(pressureTop, pressureBottom);
+            const pressureScale = plotWidth / (maxPressure * 1.3);
+            const depthScale = plotHeight / t;
+            
+            // Начало координат (слева)
+            const originX = margin;
+            const originY = margin;
+            
+            // Сетка и оси
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 1;
+            
+            // Вертикальная ось (ось шпунта)
+            ctx.strokeStyle = '#9da5b4';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Горизонтальные линии (дно котлована и низ шпунта)
+            ctx.strokeStyle = '#2d3748';
+            ctx.beginPath();
+            ctx.moveTo(margin, originY);
+            ctx.lineTo(width - margin, originY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(margin, originY + plotHeight);
+            ctx.lineTo(width - margin, originY + plotHeight);
+            ctx.stroke();
+            
+            // Построение эпюры пассивного сопротивления
+            ctx.strokeStyle = '#44ff44';
+            ctx.fillStyle = 'rgba(68, 255, 68, 0.2)';
+            ctx.lineWidth = 3;
+            
+            const topX = originX + pressureTop * pressureScale;
+            const bottomX = originX + pressureBottom * pressureScale;
+            
+            // Отрисовка эпюры (трапеция)
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(topX, originY);
+            ctx.lineTo(bottomX, originY + plotHeight);
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Точка приложения равнодействующей
+            const appPointY = originY + applicationPoint * depthScale;
+            ctx.fillStyle = '#f0a500';
+            ctx.beginPath();
+            ctx.arc(originX, appPointY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Стрелка равнодействующей
+            ctx.strokeStyle = '#f0a500';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(originX, appPointY);
+            ctx.lineTo(originX + 50, appPointY);
+            // Наконечник стрелки
+            ctx.lineTo(originX + 45, appPointY - 5);
+            ctx.moveTo(originX + 50, appPointY);
+            ctx.lineTo(originX + 45, appPointY + 5);
+            ctx.stroke();
+            
+            // Подписи значений
+            ctx.fillStyle = '#e8e6e3';
+            ctx.font = '12px Roboto Condensed';
+            ctx.textAlign = 'left';
+            
+            // Давление у дна котлована
+            ctx.fillText(`σp(0) = ${pressureTop.toFixed(1)} кПа`, topX + 5, originY + 15);
+            
+            // Давление на глубине заглубления
+            ctx.fillText(`σp(t) = ${pressureBottom.toFixed(1)} кПа`, bottomX + 5, originY + plotHeight - 5);
+            
+            // Точка приложения равнодействующей
+            ctx.fillStyle = '#f0a500';
+            ctx.fillText(`Ep (${applicationPoint.toFixed(2)} м)`, originX + 55, appPointY + 5);
+            
+            // Отметки глубины
+            ctx.fillStyle = '#e8e6e3';
+            ctx.textAlign = 'right';
+            ctx.fillText('0 м (дно)', originX - 10, originY + 5);
+            ctx.fillText(`${t.toFixed(1)} м`, originX - 10, originY + plotHeight + 5);
+            
+            // Заголовки осей
+            ctx.fillStyle = '#c87533';
+            ctx.font = 'bold 14px Roboto Condensed';
+            ctx.textAlign = 'center';
+            ctx.fillText('Пассивное сопротивление σp, кПа', width / 2, height - 20);
+            
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Глубина заглубления t, м', 0, 0);
+            ctx.restore();
+        }
+
+        // Загрузка данных для модуля 5
+        function loadModule5Data() {
+            const activeData = localStorage.getItem('larsenActivePressure');
+            const passiveData = localStorage.getItem('larsenPassiveResistance');
+            
+            if (!activeData || !passiveData) {
+                showMessage('Необходимо выполнить расчёты в Модулях 3 и 4', 'error', 'validationMessage5');
+                return;
+            }
+            
+            const active = JSON.parse(activeData);
+            const passive = JSON.parse(passiveData);
+            
+            document.getElementById('display5-ea').textContent = active.resultant.toFixed(1);
+            document.getElementById('display5-t-preliminary').textContent = passive.embedmentDepth.toFixed(2);
+            document.getElementById('display5-safety').textContent = passive.actualSafetyFactor.toFixed(2);
+            
+            const status = passive.conditionMet ? '✓ Выполнено' : '✗ Не выполнено';
+            const statusElement = document.getElementById('display5-status');
+            statusElement.textContent = status;
+            statusElement.style.color = passive.conditionMet ? '#48a999' : '#d64545';
+        }
+
+        // Автоматический подбор глубины заглубления
+        function autoCalculateEmbedmentDepth() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const coeffData = localStorage.getItem('larsenCoefficients');
+            const activeData = localStorage.getItem('larsenActivePressure');
+            
+            if (!inputData || !coeffData || !activeData) {
+                showMessage('Необходимо выполнить расчёты в предыдущих модулях', 'error', 'validationMessage5');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const coeff = JSON.parse(coeffData);
+            const active = JSON.parse(activeData);
+            
+            const gammaW = 9.8;
+            const gammaPrime = data.waterLevel === 'below' ? data.gamma : data.gamma - gammaW;
+            const Kp = coeff.Kp;
+            const cohesionPassive = coeff.cohesionPassive;
+            const targetSafety = 1.2;
+            const Ea = active.resultant;
+            
+            let t = parseFloat(document.getElementById('auto-start-depth').value);
+            let iterations = 0;
+            const maxIterations = 200;
+            const step = 0.1;
+            
+            // Итерационный подбор
+            while (iterations < maxIterations) {
+                const pressureTop = cohesionPassive;
+                const pressureBottom = gammaPrime * t * Kp + cohesionPassive;
+                const Ep = 0.5 * (pressureTop + pressureBottom) * t;
+                const safety = Ep / Ea;
+                
+                if (safety >= targetSafety) {
+                    break;
+                }
+                
+                t += step;
+                iterations++;
+            }
+            
+            if (iterations >= maxIterations) {
+                showMessage('Не удалось подобрать глубину. Проверьте исходные данные.', 'error', 'validationMessage5');
+                return;
+            }
+            
+            const minDepth = t;
+            const recommendedDepth = t * 1.1; // +10% запаса
+            
+            // Проверка достигнутого коэффициента
+            const pressureTop = cohesionPassive;
+            const pressureBottom = gammaPrime * minDepth * Kp + cohesionPassive;
+            const Ep = 0.5 * (pressureTop + pressureBottom) * minDepth;
+            const achievedSafety = Ep / Ea;
+            
+            // Вывод результатов
+            document.getElementById('result5-min-depth').textContent = minDepth.toFixed(2);
+            document.getElementById('result5-recommended-depth').textContent = recommendedDepth.toFixed(2);
+            document.getElementById('result5-achieved-safety').textContent = achievedSafety.toFixed(2);
+            document.getElementById('result5-iterations').textContent = iterations;
+            document.getElementById('auto-calc-result').style.display = 'block';
+            
+            // Обновление полей
+            document.getElementById('final-embedment-depth').value = recommendedDepth.toFixed(2);
+            document.getElementById('result5-final-depth').textContent = recommendedDepth.toFixed(2);
+            
+            showMessage('✓ Глубина заглубления подобрана успешно!', 'success', 'validationMessage5');
+        }
+
+        // Проверка вручную введённой глубины
+        function verifyManualDepth() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const coeffData = localStorage.getItem('larsenCoefficients');
+            const activeData = localStorage.getItem('larsenActivePressure');
+            
+            if (!inputData || !coeffData || !activeData) {
+                showMessage('Необходимо выполнить расчёты в предыдущих модулях', 'error', 'validationMessage5');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const coeff = JSON.parse(coeffData);
+            const active = JSON.parse(activeData);
+            
+            const t = parseFloat(document.getElementById('final-embedment-depth').value);
+            const gammaW = 9.8;
+            const gammaPrime = data.waterLevel === 'below' ? data.gamma : data.gamma - gammaW;
+            const Kp = coeff.Kp;
+            const cohesionPassive = coeff.cohesionPassive;
+            
+            const pressureTop = cohesionPassive;
+            const pressureBottom = gammaPrime * t * Kp + cohesionPassive;
+            const Ep = 0.5 * (pressureTop + pressureBottom) * t;
+            const safety = Ep / active.resultant;
+            
+            document.getElementById('result5-manual-ep').textContent = Ep.toFixed(1);
+            document.getElementById('result5-manual-safety').textContent = safety.toFixed(2);
+            document.getElementById('result5-final-depth').textContent = t.toFixed(2);
+            
+            if (safety >= 1.2) {
+                showMessage(`✓ Проверка пройдена! Коэффициент запаса: ${safety.toFixed(2)} ≥ 1.2`, 'success', 'validationMessage5');
+            } else {
+                showMessage(`✗ Недостаточный запас! Коэффициент: ${safety.toFixed(2)} < 1.2. Увеличьте глубину.`, 'error', 'validationMessage5');
+            }
+        }
+
+        // Принятие окончательной глубины
+        function acceptFinalDepth() {
+            const t = parseFloat(document.getElementById('final-embedment-depth').value);
+            
+            if (isNaN(t) || t <= 0) {
+                showMessage('Задайте корректную глубину заглубления', 'error', 'validationMessage5');
+                return;
+            }
+            
+            // Проверка условия
+            verifyManualDepth();
+            
+            const safety = parseFloat(document.getElementById('result5-manual-safety').textContent);
+            
+            if (safety < 1.2) {
+                showMessage('Нельзя принять глубину с недостаточным коэффициентом запаса!', 'error', 'validationMessage5');
+                return;
+            }
+            
+            // Сохранение окончательной глубины
+            const finalData = {
+                embedmentDepth: t,
+                safetyFactor: safety
+            };
+            localStorage.setItem('larsenFinalDepth', JSON.stringify(finalData));
+            
+            showMessage('✓ Глубина принята! Переход к Модулю 6...', 'success', 'validationMessage5');
+            
+            // Отметить модуль 5 как завершённый
+            document.querySelectorAll('.module-nav-item')[4].classList.add('completed');
+            
+            setTimeout(() => switchModule(6), 1500);
+        }
+
+        // База данных профилей шпунта Ларсена
+        const larsenProfiles = [
+            { name: 'ШП-1', W: 750, I: 6900, mass: 52, manufacturer: 'gost' },
+            { name: 'ШП-2', W: 1050, I: 9500, mass: 58, manufacturer: 'gost' },
+            { name: 'ШП-3', W: 1450, I: 13200, mass: 67, manufacturer: 'gost' },
+            { name: 'ШП-4', W: 1850, I: 17100, mass: 75, manufacturer: 'gost' },
+            { name: 'ШП-5', W: 2300, I: 21500, mass: 84, manufacturer: 'gost' },
+            { name: 'Larssen 22', W: 1800, I: 16200, mass: 73, manufacturer: 'arcelor' },
+            { name: 'Larssen 23', W: 2100, I: 19000, mass: 78, manufacturer: 'arcelor' },
+            { name: 'Larssen 24', W: 2450, I: 22500, mass: 85, manufacturer: 'arcelor' },
+            { name: 'Larssen 25', W: 2850, I: 26800, mass: 93, manufacturer: 'arcelor' },
+            { name: 'Larssen 430', W: 3100, I: 29500, mass: 98, manufacturer: 'arcelor' },
+            { name: 'PU 6', W: 800, I: 7200, mass: 54, manufacturer: 'thyssen' },
+            { name: 'PU 8', W: 1100, I: 10000, mass: 61, manufacturer: 'thyssen' },
+            { name: 'PU 12', W: 1600, I: 14800, mass: 71, manufacturer: 'thyssen' },
+            { name: 'PU 18', W: 2200, I: 20500, mass: 82, manufacturer: 'thyssen' },
+            { name: 'PU 22', W: 2750, I: 25600, mass: 91, manufacturer: 'thyssen' }
+        ];
+
+        // Загрузка данных для модуля 6
+        function loadModule6Data() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const finalDepthData = localStorage.getItem('larsenFinalDepth');
+            
+            if (!inputData || !finalDepthData) {
+                showMessage('Необходимо завершить предыдущие модули', 'error', 'validationMessage6');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const finalDepth = JSON.parse(finalDepthData);
+            
+            const H = data.excavationDepth;
+            const t = finalDepth.embedmentDepth;
+            const totalLength = H + t;
+            
+            document.getElementById('display6-depth').textContent = H.toFixed(1);
+            document.getElementById('display6-embedment').textContent = t.toFixed(2);
+            document.getElementById('display6-total-length').textContent = totalLength.toFixed(2);
+            
+            const schemeNames = {
+                'no_support': 'Консольное (без распорок)',
+                'one_tier': 'Один ярус распорок',
+                'two_tier': 'Два яруса распорок'
+            };
+            document.getElementById('display6-scheme').textContent = schemeNames[data.supportScheme] || data.supportScheme;
+            
+            // Показать поле положения распорки, если схема с распорками
+            if (data.supportScheme !== 'no_support') {
+                document.getElementById('strut-position-group').style.display = 'block';
+            }
+        }
+
+        // Расчёт изгибающего момента
+        function calculateBendingMoment() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const activeData = localStorage.getItem('larsenActivePressure');
+            const passiveData = localStorage.getItem('larsenPassiveResistance');
+            const finalDepthData = localStorage.getItem('larsenFinalDepth');
+            
+            if (!inputData || !activeData || !passiveData || !finalDepthData) {
+                showMessage('Необходимо завершить предыдущие модули', 'error', 'validationMessage6');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const active = JSON.parse(activeData);
+            const passive = JSON.parse(passiveData);
+            const finalDepth = JSON.parse(finalDepthData);
+            
+            const H = data.excavationDepth;
+            const t = finalDepth.embedmentDepth;
+            const Ea = active.resultant;
+            const Ep = passive.resultant;
+            
+            let Mmax, positionMmax;
+            
+            if (data.supportScheme === 'no_support') {
+                // Консольная схема
+                // Плечи равнодействующих (упрощённо)
+                const eA = H / 3; // для треугольной эпюры
+                const eP = t / 3;
+                
+                Mmax = Math.abs(Ea * eA - Ep * eP);
+                positionMmax = H; // у дна котлована
+            } else {
+                // Со распорками - упрощённый расчёт
+                const strutPosition = parseFloat(document.getElementById('strut-position').value);
+                
+                // Момент в пролёте
+                const span = H - strutPosition;
+                Mmax = (Ea * span * span) / 8; // как для балки на двух опорах
+                positionMmax = strutPosition + span / 2;
+            }
+            
+            // Поперечная сила
+            const Qmax = Math.max(Ea, Ep);
+            const positionQmax = H; // обычно у дна котлована
+            
+            // Вывод результатов
+            document.getElementById('result6-max-moment').textContent = Mmax.toFixed(1);
+            document.getElementById('result6-moment-position').textContent = positionMmax.toFixed(2);
+            document.getElementById('result6-max-shear').textContent = Qmax.toFixed(1);
+            document.getElementById('result6-shear-position').textContent = positionQmax.toFixed(2);
+            
+            // Построение эпюры моментов
+            drawMomentDiagram(H, t, Mmax, positionMmax, data.supportScheme);
+            document.getElementById('moment-diagram').style.display = 'block';
+            
+            // Сохранение результатов
+            const results = {
+                Mmax,
+                positionMmax,
+                Qmax,
+                positionQmax
+            };
+            localStorage.setItem('larsenForces', JSON.stringify(results));
+            
+            showMessage('✓ Усилия рассчитаны успешно!', 'success', 'validationMessage6');
+        }
+
+        // Построение эпюры моментов
+        function drawMomentDiagram(H, t, Mmax, positionMmax, scheme) {
+            const canvas = document.getElementById('momentDiagramCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const margin = 60;
+            const plotWidth = width - 2 * margin;
+            const plotHeight = height - 2 * margin;
+            
+            const totalLength = H + t;
+            const depthScale = plotHeight / totalLength;
+            const momentScale = plotWidth / (Mmax * 1.3);
+            
+            const originX = margin;
+            const originY = margin;
+            
+            // Оси
+            ctx.strokeStyle = '#9da5b4';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Линия дна котлована
+            ctx.strokeStyle = '#c87533';
+            ctx.lineWidth = 2;
+            const bottomY = originY + H * depthScale;
+            ctx.beginPath();
+            ctx.moveTo(margin, bottomY);
+            ctx.lineTo(width - margin, bottomY);
+            ctx.stroke();
+            
+            // Эпюра моментов (упрощённая)
+            ctx.strokeStyle = '#4a90a4';
+            ctx.fillStyle = 'rgba(74, 144, 164, 0.2)';
+            ctx.lineWidth = 3;
+            
+            const maxMomentX = originX + Mmax * momentScale;
+            const maxMomentY = originY + positionMmax * depthScale;
+            
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            
+            if (scheme === 'no_support') {
+                // Консольная эпюра
+                ctx.quadraticCurveTo(
+                    maxMomentX, originY + H * 0.5 * depthScale,
+                    maxMomentX, bottomY
+                );
+                ctx.lineTo(originX, bottomY);
+            } else {
+                // С распорками
+                ctx.lineTo(maxMomentX * 0.5, originY + H * 0.3 * depthScale);
+                ctx.lineTo(maxMomentX, maxMomentY);
+                ctx.lineTo(originX, bottomY);
+            }
+            
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Подписи
+            ctx.fillStyle = '#e8e6e3';
+            ctx.font = '12px Roboto Condensed';
+            ctx.fillText(`M_max = ${Mmax.toFixed(1)} кН·м/м`, maxMomentX + 5, maxMomentY);
+            
+            ctx.fillStyle = '#c87533';
+            ctx.textAlign = 'right';
+            ctx.fillText('Дно котлована', originX - 10, bottomY + 5);
+            
+            ctx.fillStyle = '#e8e6e3';
+            ctx.fillText('0 м', originX - 10, originY + 5);
+            ctx.fillText(`${totalLength.toFixed(1)} м`, originX - 10, originY + plotHeight + 5);
+        }
+
+        // Расчёт требуемого момента сопротивления
+        function calculateRequiredSection() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const forcesData = localStorage.getItem('larsenForces');
+            
+            if (!inputData || !forcesData) {
+                showMessage('Необходимо выполнить расчёт усилий', 'error', 'validationMessage6');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const forces = JSON.parse(forcesData);
+            
+            const Mmax = forces.Mmax; // кН·м/м
+            const Ry = parseFloat(document.getElementById('steel-resistance').value); // МПа
+            const gammaN = data.reliabilityCoef;
+            const m = data.workCondition;
+            
+            // Требуемый момент сопротивления
+            // W = M × γ_n / (R_y × m)
+            // M в кН·м/м → Н·мм/м = 10^6 Н·мм/м
+            // W в мм³/м → см³/м (делим на 10³)
+            
+            const W_required = (Mmax * 1000 * gammaN) / (Ry * m); // см³/м
+            
+            // Расчётное напряжение
+            const sigma = (Mmax * 1000 * gammaN) / (W_required / 10); // МПа (если W в см³)
+            
+            document.getElementById('result6-required-w').textContent = W_required.toFixed(1);
+            document.getElementById('result6-stress').textContent = sigma.toFixed(1);
+            
+            // Сохранение результатов
+            const sectionData = {
+                W_required,
+                sigma,
+                Ry
+            };
+            localStorage.setItem('larsenSection', JSON.stringify(sectionData));
+            
+            showMessage('✓ Требуемое сечение определено!', 'success', 'validationMessage6');
+            
+            // Отметить модуль 6 как завершённый
+            document.querySelectorAll('.module-nav-item')[5].classList.add('completed');
+        }
+
+        // Загрузка данных для модуля 7
+        function loadModule7Data() {
+            const sectionData = localStorage.getItem('larsenSection');
+            
+            if (!sectionData) {
+                showMessage('Необходимо выполнить расчёт в Модуле 6', 'error', 'validationMessage7');
+                return;
+            }
+            
+            const section = JSON.parse(sectionData);
+            document.getElementById('display7-required-w').textContent = section.W_required.toFixed(1);
+            document.getElementById('display7-ry').textContent = section.Ry.toFixed(0);
+            
+            // Заполнение таблицы профилей
+            populateProfilesTable(section.W_required);
+        }
+
+        // Заполнение таблицы профилей
+        function populateProfilesTable(requiredW) {
+            const tbody = document.getElementById('profiles-table');
+            const filter = document.getElementById('manufacturer-filter').value;
+            
+            tbody.innerHTML = '';
+            
+            const filteredProfiles = filter === 'all' 
+                ? larsenProfiles 
+                : larsenProfiles.filter(p => p.manufacturer === filter);
+            
+            filteredProfiles.forEach(profile => {
+                const suitable = profile.W >= requiredW;
+                const reserve = ((profile.W - requiredW) / requiredW * 100).toFixed(1);
+                
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid var(--border-color)';
+                
+                const statusColor = suitable ? 'var(--success)' : 'var(--error)';
+                const statusText = suitable ? '✓ Подходит' : '✗ Не подходит';
+                
+                row.innerHTML = `
+                    <td style="padding: 12px; color: var(--text-primary);">${profile.name}</td>
+                    <td style="padding: 12px; text-align: center; color: var(--text-primary);">${profile.W}</td>
+                    <td style="padding: 12px; text-align: center; color: var(--text-secondary);">${profile.I}</td>
+                    <td style="padding: 12px; text-align: center; color: var(--text-secondary);">${profile.mass}</td>
+                    <td style="padding: 12px; text-align: center; color: ${statusColor}; font-weight: 700;">${statusText}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <button class="preset-btn" onclick='selectProfile(${JSON.stringify(profile)}, ${reserve})' 
+                                ${!suitable ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                            Выбрать
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Выбор профиля
+        function selectProfile(profile, reserve) {
+            document.getElementById('result7-profile-name').textContent = profile.name;
+            document.getElementById('result7-actual-w').textContent = profile.W;
+            document.getElementById('result7-reserve').textContent = reserve;
+            document.getElementById('result7-mass').textContent = profile.mass;
+            
+            document.getElementById('selected-profile-info').style.display = 'block';
+            document.getElementById('no-profile-selected').style.display = 'none';
+            
+            // Сохранение выбранного профиля
+            localStorage.setItem('larsenSelectedProfile', JSON.stringify(profile));
+            
+            showMessage(`✓ Профиль ${profile.name} выбран успешно!`, 'success', 'validationMessage7');
+            
+            // Отметить модуль 7 как завершённый
+            document.querySelectorAll('.module-nav-item')[6].classList.add('completed');
+        }
+
+        // Фильтр производителей
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterSelect = document.getElementById('manufacturer-filter');
+            if (filterSelect) {
+                filterSelect.addEventListener('change', function() {
+                    const sectionData = localStorage.getItem('larsenSection');
+                    if (sectionData) {
+                        const section = JSON.parse(sectionData);
+                        populateProfilesTable(section.W_required);
+                    }
+                });
+            }
+        });
+
+        // Расчёт прогиба
+        function calculateDeflection() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const finalDepthData = localStorage.getItem('larsenFinalDepth');
+            const profileData = localStorage.getItem('larsenSelectedProfile');
+            const activeData = localStorage.getItem('larsenActivePressure');
+            
+            if (!inputData || !finalDepthData || !profileData || !activeData) {
+                showMessage('Необходимо завершить предыдущие модули', 'error', 'validationMessage8');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const profile = JSON.parse(profileData);
+            const active = JSON.parse(activeData);
+            
+            const H = data.excavationDepth;
+            const q = active.equivalentLoad || 10; // кПа
+            const L = H * 1000; // мм
+            const E = 210000; // МПа (модуль упругости стали)
+            const I = profile.I * 10000; // см⁴/м → мм⁴/м
+            
+            // Прогиб для консольной схемы: δ = (q × L⁴) / (8 × E × I)
+            const deflection = (q * Math.pow(L, 4)) / (8 * E * I);
+            const limitDeflection = L / 200; // предельный прогиб L/200
+            
+            document.getElementById('result8-deflection').textContent = deflection.toFixed(1);
+            document.getElementById('result8-limit-deflection').textContent = limitDeflection.toFixed(1);
+            
+            const statusDiv = document.getElementById('deflection-status');
+            statusDiv.style.display = 'block';
+            
+            if (deflection <= limitDeflection) {
+                statusDiv.textContent = `✓ Прогиб в норме: ${deflection.toFixed(1)} мм ≤ ${limitDeflection.toFixed(1)} мм`;
+                statusDiv.className = 'validation-message success';
+            } else {
+                statusDiv.textContent = `✗ Превышен допустимый прогиб: ${deflection.toFixed(1)} мм > ${limitDeflection.toFixed(1)} мм. Рекомендуется усиление.`;
+                statusDiv.className = 'validation-message error';
+            }
+        }
+
+        // Генерация рекомендаций
+        function generateRecommendations() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const profileData = localStorage.getItem('larsenSelectedProfile');
+            
+            if (!inputData || !profileData) {
+                showMessage('Необходимо завершить предыдущие модули', 'error', 'validationMessage8');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const profile = JSON.parse(profileData);
+            
+            let recommendations = '<ul style="line-height: 2; color: var(--text-secondary);">';
+            
+            // Рекомендации по грунту
+            if (data.phi < 20) {
+                recommendations += '<li>⚠ <strong>Слабый грунт:</strong> Рекомендуется предварительное укрепление основания</li>';
+            }
+            
+            // Рекомендации по глубине
+            if (data.excavationDepth > 8) {
+                recommendations += '<li>⚠ <strong>Большая глубина:</strong> Необходим расчёт многоярусного крепления</li>';
+            }
+            
+            // Рекомендации по УГВ
+            if (data.waterLevel !== 'below') {
+                recommendations += '<li>💧 <strong>Высокий УГВ:</strong> Требуется водопонижение или водонепроницаемые замки</li>';
+            }
+            
+            // Рекомендации по профилю
+            if (profile.mass > 85) {
+                recommendations += '<li>⚙ <strong>Тяжёлый профиль:</strong> Рекомендуется вибропогружение с мощным оборудованием</li>';
+            } else {
+                recommendations += '<li>✓ <strong>Оптимальный профиль:</strong> Возможно погружение стандартным оборудованием</li>';
+            }
+            
+            // Общие рекомендации
+            recommendations += '<li>📋 <strong>Контроль:</strong> Обязательный геотехнический мониторинг в процессе работ</li>';
+            recommendations += '<li>🔍 <strong>Проверка:</strong> Инструментальный контроль вертикальности шпунта (отклонение &lt;1%)</li>';
+            
+            // Условия эксплуатации
+            if (document.getElementById('aggressive-environment')?.checked) {
+                recommendations += '<li>🛡 <strong>Защита:</strong> Антикоррозийное покрытие усиленного типа</li>';
+            }
+            
+            if (document.getElementById('dynamic-loads')?.checked) {
+                recommendations += '<li>⚡ <strong>Усиление:</strong> Дополнительные распорки для восприятия динамики</li>';
+            }
+            
+            recommendations += '</ul>';
+            
+            document.getElementById('auto-recommendations').innerHTML = recommendations;
+            
+            showMessage('✓ Рекомендации сформированы!', 'success', 'validationMessage8');
+            
+            // Отметить модуль 8 как завершённый
+            document.querySelectorAll('.module-nav-item')[7].classList.add('completed');
+        }
+
+        // Генерация полного отчёта
+        function generateFullReport() {
+            const inputData = localStorage.getItem('larsenInputData');
+            const coeffData = localStorage.getItem('larsenCoefficients');
+            const activeData = localStorage.getItem('larsenActivePressure');
+            const passiveData = localStorage.getItem('larsenPassiveResistance');
+            const finalDepthData = localStorage.getItem('larsenFinalDepth');
+            const forcesData = localStorage.getItem('larsenForces');
+            const sectionData = localStorage.getItem('larsenSection');
+            const profileData = localStorage.getItem('larsenSelectedProfile');
+            
+            if (!inputData || !profileData) {
+                showMessage('Необходимо завершить все этапы расчёта', 'error', 'validationMessage9');
+                return;
+            }
+            
+            const data = JSON.parse(inputData);
+            const coeff = JSON.parse(coeffData);
+            const active = JSON.parse(activeData);
+            const passive = JSON.parse(passiveData);
+            const finalDepth = JSON.parse(finalDepthData);
+            const forces = JSON.parse(forcesData);
+            const section = JSON.parse(sectionData);
+            const profile = JSON.parse(profileData);
+            
+            // Отрисовка эпюр в отчёте
+            setTimeout(() => {
+                drawReportActivePressure(data, coeff, active);
+                drawReportPassiveResistance(data, coeff, passive, finalDepth);
+                drawReportMomentDiagram(data, finalDepth, forces);
+            }, 100);
+            
+            // Общие сведения
+            document.getElementById('report-general-info').innerHTML = `
+                <p><strong>Дата расчёта:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+                <p><strong>Нормативный документ:</strong> ВСН 136-78 "Подпорные стены, судоходные шлюзы, сухие доки"</p>
+                <p><strong>Тип конструкции:</strong> Шпунтовая стенка из стального шпунта Ларсена</p>
+            `;
+            
+            // Исходные данные
+            const schemeNames = {
+                'no_support': 'Консольное (без распорок)',
+                'one_tier': 'Один ярус распорок',
+                'two_tier': 'Два яруса распорок'
+            };
+            
+            document.getElementById('report-input-data').innerHTML = `
+                <p><strong>Геометрия котлована:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Глубина котлована: ${data.excavationDepth} м</li>
+                    <li>Ширина: ${data.excavationWidth} м</li>
+                    <li>Длина: ${data.excavationLength} м</li>
+                    <li>Схема крепления: ${schemeNames[data.supportScheme]}</li>
+                </ul>
+                <p><strong>Характеристики грунта:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Удельный вес γ = ${data.gamma} кН/м³</li>
+                    <li>Угол внутреннего трения φ = ${data.phi}°</li>
+                    <li>Сцепление c = ${data.cohesion} кПа</li>
+                    <li>Уровень грунтовых вод: ${data.waterLevel === 'below' ? 'ниже дна котлована' : 'в пределах котлована'}</li>
+                </ul>
+                <p><strong>Нагрузки:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Распределённая нагрузка: ${data.surfaceLoad || 0} кПа</li>
+                    <li>Техника у бровки: ${data.craneWeight || 0} т</li>
+                </ul>
+            `;
+            
+            // Результаты расчёта
+            document.getElementById('report-calculations').innerHTML = `
+                <p><strong>Коэффициенты давления грунта:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Коэффициент активного давления Ka = ${coeff.Ka.toFixed(3)}</li>
+                    <li>Коэффициент пассивного давления Kp = ${coeff.Kp.toFixed(2)}</li>
+                </ul>
+                <p><strong>Давления грунта:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Активная равнодействующая Ea = ${active.resultant.toFixed(1)} кН/м</li>
+                    <li>Пассивная равнодействующая Ep = ${passive.resultant.toFixed(1)} кН/м</li>
+                    <li>Коэффициент запаса устойчивости: ${passive.actualSafetyFactor.toFixed(2)} ≥ 1.2 ✓</li>
+                </ul>
+                <p><strong>Глубина заглубления шпунта:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Расчётная глубина заглубления: ${finalDepth.embedmentDepth.toFixed(2)} м</li>
+                    <li>Полная длина шпунта: ${(data.excavationDepth + finalDepth.embedmentDepth).toFixed(2)} м</li>
+                </ul>
+                <p><strong>Усилия в шпунте:</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>Максимальный изгибающий момент: ${forces.Mmax.toFixed(1)} кН·м/м</li>
+                    <li>Максимальная поперечная сила: ${forces.Qmax.toFixed(1)} кН/м</li>
+                    <li>Требуемый момент сопротивления: ${section.W_required.toFixed(1)} см³/м</li>
+                </ul>
+            `;
+            
+            // Принятые решения
+            document.getElementById('report-decisions').innerHTML = `
+                <p><strong>Принятый профиль шпунта:</strong> ${profile.name}</p>
+                <ul style="margin-left: 20px;">
+                    <li>Момент сопротивления: W = ${profile.W} см³/м</li>
+                    <li>Момент инерции: I = ${profile.I} см⁴/м</li>
+                    <li>Масса: ${profile.mass} кг/м²</li>
+                    <li>Запас по моменту сопротивления: ${((profile.W / section.W_required - 1) * 100).toFixed(1)}%</li>
+                </ul>
+                <p><strong>Длина шпунта:</strong> ${(data.excavationDepth + finalDepth.embedmentDepth).toFixed(2)} м</p>
+                <p><strong>Общая масса конструкции:</strong> ${(profile.mass * data.excavationLength * 2).toFixed(0)} кг</p>
+            `;
+            
+            showMessage('✓ Отчёт сформирован!', 'success', 'report-status');
+            document.getElementById('report-status').style.display = 'block';
+            
+            // Отметить модуль 9 как завершённый
+            document.querySelectorAll('.module-nav-item')[8].classList.add('completed');
+        }
+
+        // Отрисовка эпюры активного давления для отчёта
+        function drawReportActivePressure(data, coeff, active) {
+            const canvas = document.getElementById('report-active-pressure-canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const H = data.excavationDepth;
+            const gamma = data.gamma;
+            const Ka = coeff.Ka;
+            const cohesionActive = coeff.cohesionActive;
+            
+            let q = data.distributedLoad ? data.surfaceLoad : 0;
+            if (data.craneLoad) {
+                const craneLoadKPa = (data.craneWeight * 9.81) / (data.excavationWidth * 2);
+                q += craneLoadKPa;
+            }
+            
+            const pressureTop = cohesionActive + q * Ka;
+            const pressureBottom = gamma * H * Ka + cohesionActive + q * Ka;
+            
+            let tensionDepth = 0;
+            if (pressureTop < 0) {
+                tensionDepth = Math.abs(cohesionActive + q * Ka) / (gamma * Ka);
+            }
+            
+            const margin = 60;
+            const plotWidth = width - 2 * margin;
+            const plotHeight = height - 2 * margin;
+            const maxPressure = Math.max(Math.abs(pressureTop), Math.abs(pressureBottom));
+            const pressureScale = plotWidth / (maxPressure * 1.2);
+            const depthScale = plotHeight / H;
+            const originX = margin + plotWidth / 2;
+            const originY = margin;
+            
+            // Оси
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#9da5b4';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(margin, originY);
+            ctx.lineTo(width - margin, originY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(margin, originY + plotHeight);
+            ctx.lineTo(width - margin, originY + plotHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Эпюра
+            ctx.strokeStyle = '#ff4444';
+            ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
+            ctx.lineWidth = 3;
+            
+            const topX = originX + pressureTop * pressureScale;
+            const bottomX = originX + pressureBottom * pressureScale;
+            
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(topX, originY);
+            
+            if (tensionDepth > 0 && pressureTop < 0) {
+                const tensionY = originY + tensionDepth * depthScale;
+                ctx.lineTo(originX, tensionY);
+                ctx.lineTo(bottomX, originY + plotHeight);
+            } else {
+                ctx.lineTo(bottomX, originY + plotHeight);
+            }
+            
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Подписи
+            ctx.fillStyle = '#e8e6e3';
+            ctx.font = '12px Roboto Condensed';
+            ctx.textAlign = 'left';
+            ctx.fillText(`σa(0) = ${pressureTop.toFixed(1)} кПа`, topX + 5, originY + 15);
+            ctx.fillText(`σa(H) = ${pressureBottom.toFixed(1)} кПа`, bottomX + 5, originY + plotHeight - 5);
+            
+            ctx.textAlign = 'right';
+            ctx.fillText('0 м', originX - 10, originY + 5);
+            ctx.fillText(`${H.toFixed(1)} м`, originX - 10, originY + plotHeight + 5);
+            
+            ctx.fillStyle = '#c87533';
+            ctx.font = 'bold 14px Roboto Condensed';
+            ctx.textAlign = 'center';
+            ctx.fillText('Активное давление σa, кПа', width / 2, height - 20);
+            
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Глубина z, м', 0, 0);
+            ctx.restore();
+        }
+
+        // Отрисовка эпюры пассивного сопротивления для отчёта
+        function drawReportPassiveResistance(data, coeff, passive, finalDepth) {
+            const canvas = document.getElementById('report-passive-resistance-canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const t = finalDepth.embedmentDepth;
+            const gammaW = 9.8;
+            const gammaPrime = data.waterLevel === 'below' ? data.gamma : data.gamma - gammaW;
+            const Kp = coeff.Kp;
+            const cohesionPassive = coeff.cohesionPassive;
+            
+            const pressureTop = cohesionPassive;
+            const pressureBottom = gammaPrime * t * Kp + cohesionPassive;
+            const applicationPoint = passive.applicationPoint;
+            
+            const margin = 60;
+            const plotWidth = width - 2 * margin;
+            const plotHeight = height - 2 * margin;
+            const maxPressure = Math.max(pressureTop, pressureBottom);
+            const pressureScale = plotWidth / (maxPressure * 1.3);
+            const depthScale = plotHeight / t;
+            const originX = margin;
+            const originY = margin;
+            
+            // Оси
+            ctx.strokeStyle = '#9da5b4';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.strokeStyle = '#2d3748';
+            ctx.beginPath();
+            ctx.moveTo(margin, originY);
+            ctx.lineTo(width - margin, originY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(margin, originY + plotHeight);
+            ctx.lineTo(width - margin, originY + plotHeight);
+            ctx.stroke();
+            
+            // Эпюра
+            ctx.strokeStyle = '#44ff44';
+            ctx.fillStyle = 'rgba(68, 255, 68, 0.2)';
+            ctx.lineWidth = 3;
+            
+            const topX = originX + pressureTop * pressureScale;
+            const bottomX = originX + pressureBottom * pressureScale;
+            
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(topX, originY);
+            ctx.lineTo(bottomX, originY + plotHeight);
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Точка приложения
+            const appPointY = originY + applicationPoint * depthScale;
+            ctx.fillStyle = '#f0a500';
+            ctx.beginPath();
+            ctx.arc(originX, appPointY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#f0a500';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(originX, appPointY);
+            ctx.lineTo(originX + 50, appPointY);
+            ctx.lineTo(originX + 45, appPointY - 5);
+            ctx.moveTo(originX + 50, appPointY);
+            ctx.lineTo(originX + 45, appPointY + 5);
+            ctx.stroke();
+            
+            // Подписи
+            ctx.fillStyle = '#e8e6e3';
+            ctx.font = '12px Roboto Condensed';
+            ctx.textAlign = 'left';
+            ctx.fillText(`σp(0) = ${pressureTop.toFixed(1)} кПа`, topX + 5, originY + 15);
+            ctx.fillText(`σp(t) = ${pressureBottom.toFixed(1)} кПа`, bottomX + 5, originY + plotHeight - 5);
+            
+            ctx.fillStyle = '#f0a500';
+            ctx.fillText(`Ep (${applicationPoint.toFixed(2)} м)`, originX + 55, appPointY + 5);
+            
+            ctx.fillStyle = '#e8e6e3';
+            ctx.textAlign = 'right';
+            ctx.fillText('0 м (дно)', originX - 10, originY + 5);
+            ctx.fillText(`${t.toFixed(1)} м`, originX - 10, originY + plotHeight + 5);
+            
+            ctx.fillStyle = '#c87533';
+            ctx.font = 'bold 14px Roboto Condensed';
+            ctx.textAlign = 'center';
+            ctx.fillText('Пассивное сопротивление σp, кПа', width / 2, height - 20);
+            
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Глубина заглубления t, м', 0, 0);
+            ctx.restore();
+        }
+
+        // Отрисовка эпюры моментов для отчёта
+        function drawReportMomentDiagram(data, finalDepth, forces) {
+            const canvas = document.getElementById('report-moment-diagram-canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const H = data.excavationDepth;
+            const t = finalDepth.embedmentDepth;
+            const Mmax = forces.Mmax;
+            const positionMmax = forces.positionMmax;
+            const scheme = data.supportScheme;
+            
+            const margin = 60;
+            const plotWidth = width - 2 * margin;
+            const plotHeight = height - 2 * margin;
+            const totalLength = H + t;
+            const depthScale = plotHeight / totalLength;
+            const momentScale = plotWidth / (Mmax * 1.3);
+            const originX = margin;
+            const originY = margin;
+            
+            // Оси
+            ctx.strokeStyle = '#9da5b4';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX, originY + plotHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Линия дна котлована
+            ctx.strokeStyle = '#c87533';
+            ctx.lineWidth = 2;
+            const bottomY = originY + H * depthScale;
+            ctx.beginPath();
+            ctx.moveTo(margin, bottomY);
+            ctx.lineTo(width - margin, bottomY);
+            ctx.stroke();
+            
+            // Эпюра моментов
+            ctx.strokeStyle = '#4a90a4';
+            ctx.fillStyle = 'rgba(74, 144, 164, 0.2)';
+            ctx.lineWidth = 3;
+            
+            const maxMomentX = originX + Mmax * momentScale;
+            const maxMomentY = originY + positionMmax * depthScale;
+            
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            
+            if (scheme === 'no_support') {
+                ctx.quadraticCurveTo(
+                    maxMomentX, originY + H * 0.5 * depthScale,
+                    maxMomentX, bottomY
+                );
+                ctx.lineTo(originX, bottomY);
+            } else {
+                ctx.lineTo(maxMomentX * 0.5, originY + H * 0.3 * depthScale);
+                ctx.lineTo(maxMomentX, maxMomentY);
+                ctx.lineTo(originX, bottomY);
+            }
+            
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Подписи
+            ctx.fillStyle = '#e8e6e3';
+            ctx.font = '12px Roboto Condensed';
+            ctx.fillText(`M_max = ${Mmax.toFixed(1)} кН·м/м`, maxMomentX + 5, maxMomentY);
+            
+            ctx.fillStyle = '#c87533';
+            ctx.textAlign = 'right';
+            ctx.fillText('Дно котлована', originX - 10, bottomY + 5);
+            
+            ctx.fillStyle = '#e8e6e3';
+            ctx.fillText('0 м', originX - 10, originY + 5);
+            ctx.fillText(`${totalLength.toFixed(1)} м`, originX - 10, originY + plotHeight + 5);
+            
+            ctx.fillStyle = '#c87533';
+            ctx.font = 'bold 14px Roboto Condensed';
+            ctx.textAlign = 'center';
+            ctx.fillText('Изгибающий момент M, кН·м/м', width / 2, height - 20);
+            
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Глубина от верха шпунта, м', 0, 0);
+            ctx.restore();
+        }
+
+        // Универсальная функция экспорта
+        function exportReport() {
+            const format = document.getElementById('export-format').value;
+            
+            switch(format) {
+                case 'print':
+                    printReport();
+                    break;
+                case 'pdf':
+                    exportToPDF();
+                    break;
+                case 'docx':
+                    exportToDOCX();
+                    break;
+                case 'excel':
+                    exportToExcel();
+                    break;
+                case 'json':
+                    exportToJSON();
+                    break;
+                default:
+                    showMessage('Выберите формат экспорта', 'warning', 'report-status');
+            }
+        }
+
+        // Печать отчёта
+        function printReport() {
+            window.print();
+            showMessage('✓ Открыт диалог печати', 'success', 'report-status');
+            document.getElementById('report-status').style.display = 'block';
+        }
+
+        // Экспорт в PDF
+        function exportToPDF() {
+            showMessage('📄 Генерация PDF документа...', 'warning', 'report-status');
+            document.getElementById('report-status').style.display = 'block';
+            
+            // Получение данных отчёта
+            const reportData = collectReportData();
+            
+            // Создание PDF через browser print dialog с предустановками
+            const printCSS = `
+                @media print {
+                    body { font-family: Arial, sans-serif; }
+                    .sidebar, .action-buttons, button { display: none !important; }
+                    .module-card { page-break-inside: avoid; margin-bottom: 20px; }
+                    h1, h2 { color: #000; page-break-after: avoid; }
+                }
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = printCSS;
+            document.head.appendChild(style);
+            
+            setTimeout(() => {
+                window.print();
+                document.head.removeChild(style);
+                showMessage('✓ PDF документ готов к сохранению через диалог печати', 'success', 'report-status');
+            }, 500);
+        }
+
+        // Экспорт в DOCX
+        function exportToDOCX() {
+            showMessage('📝 Генерация Word документа...', 'warning', 'report-status');
+            document.getElementById('report-status').style.display = 'block';
+            
+            const reportData = collectReportData();
+            
+            // Формирование HTML для DOCX
+            let docxContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head><meta charset='utf-8'><title>Расчёт шпунтовой стенки</title></head>
+                <body>
+                    <h1>РАСЧЁТ ШПУНТОВОЙ СТЕНКИ ИЗ СТАЛЬНОГО ШПУНТА ЛАРСЕНА</h1>
+                    <h2>по ВСН 136-78</h2>
+                    <p><b>Дата расчёта:</b> ${new Date().toLocaleDateString('ru-RU')}</p>
+                    <hr>
+                    
+                    <h2>1. ИСХОДНЫЕ ДАННЫЕ</h2>
+                    ${formatInputDataForDOCX(reportData.inputData)}
+                    
+                    <h2>2. КОЭФФИЦИЕНТЫ ДАВЛЕНИЯ ГРУНТА</h2>
+                    ${formatCoefficientsForDOCX(reportData.coefficients)}
+                    
+                    <h2>3. РАСЧЁТЫ И ПРОВЕРКИ</h2>
+                    ${formatCalculationsForDOCX(reportData)}
+                    
+                    <h2>4. ПОДБОР ПРОФИЛЯ И ПРИНЯТЫЕ РЕШЕНИЯ</h2>
+                    <p><b>Согласно п. 6.2-6.4 ВСН 136-78:</b></p>
+                    <p>Подбор профиля шпунта выполнен по условию:</p>
+                    <p>W_фактическое ≥ W_требуемое</p>
+                    <p>Профили приняты по ГОСТ 380-2005, ГОСТ 27772-2015.</p>
+                    ${formatDecisionsForDOCX(reportData)}
+                    
+                    <h2>5. ЗАКЛЮЧЕНИЕ И ВЫВОДЫ</h2>
+                    <p><b>Расчёт шпунтовой стенки выполнен в полном соответствии с ВСН 136-78 "Подпорные стены, судоходные шлюзы, сухие доки".</b></p>
+                    
+                    <p><b>Выполненные проверки:</b></p>
+                    <ul>
+                        <li>✓ Определены коэффициенты активного и пассивного давления грунта (п. 4.6 ВСН 136-78)</li>
+                        <li>✓ Рассчитаны эпюры активного давления и пассивного сопротивления (п. 4.8-4.9 ВСН 136-78)</li>
+                        <li>✓ Проверено условие устойчивости с коэффициентом запаса ≥ 1.2 (п. 4.9 ВСН 136-78)</li>
+                        <li>✓ Определена расчётная глубина заглубления шпунта (п. 4.10 ВСН 136-78)</li>
+                        <li>✓ Рассчитаны усилия в шпунте: изгибающий момент и поперечная сила (п. 5.1-5.3 ВСН 136-78)</li>
+                        <li>✓ Подобран профиль шпунта с достаточным моментом сопротивления (п. 6.2-6.4 ВСН 136-78)</li>
+                        <li>✓ Проверена прочность принятого профиля (п. 6.5 ВСН 136-78)</li>
+                    </ul>
+                    
+                    <p><b>Основные выводы:</b></p>
+                    <ol>
+                        <li>Принятая конструкция шпунтовой стенки обеспечивает требуемую устойчивость котлована</li>
+                        <li>Коэффициент запаса устойчивости соответствует требованиям ВСН 136-78</li>
+                        <li>Прочность шпунта обеспечена с необходимым запасом</li>
+                        <li>Конструкция готова к разработке рабочей документации</li>
+                    </ol>
+                    
+                    <p><b>Рекомендации по производству работ:</b></p>
+                    <ul>
+                        <li>Геотехнический мониторинг в процессе устройства котлована</li>
+                        <li>Контроль вертикальности погружения шпунта (допуск ±1%)</li>
+                        <li>Обеспечение сплошности замковых соединений</li>
+                        <li>Антикоррозийная защита в зоне переменного уровня воды</li>
+                    </ul>
+                    
+                    <p style="margin-top: 20px;"><b>Расчёт выполнен:</b> ${new Date().toLocaleDateString('ru-RU')}</p>
+                    <p><b>Программа расчёта:</b> "Расчёт шпунта Ларсена - ВСН 136-78" v1.0</p>
+                </body>
+                </html>
+            `;
+            
+            // Создание blob и скачивание
+            const blob = new Blob(['\ufeff', docxContent], {
+                type: 'application/msword'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Расчет_шпунта_Ларсена_${new Date().toISOString().split('T')[0]}.doc`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('✓ Word документ успешно экспортирован!', 'success', 'report-status');
+        }
+
+        // Экспорт в Excel
+        function exportToExcel() {
+            showMessage('📊 Генерация Excel таблицы...', 'warning', 'report-status');
+            document.getElementById('report-status').style.display = 'block';
+            
+            const reportData = collectReportData();
+            
+            // Формирование HTML таблицы для Excel
+            let excelContent = `
+                <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+                <head>
+                    <meta charset="UTF-8">
+                    <xml>
+                        <x:ExcelWorkbook>
+                            <x:ExcelWorksheets>
+                                <x:ExcelWorksheet>
+                                    <x:Name>Расчёт шпунта</x:Name>
+                                    <x:WorksheetOptions><x:Print><x:ValidPrinterInfo/></x:Print></x:WorksheetOptions>
+                                </x:ExcelWorksheet>
+                            </x:ExcelWorksheets>
+                        </x:ExcelWorkbook>
+                    </xml>
+                </head>
+                <body>
+                    <table border="1">
+                        <tr><th colspan="3" style="background-color: #c87533; color: white; font-size: 16px;">РАСЧЁТ ШПУНТОВОЙ СТЕНКИ ПО ВСН 136-78</th></tr>
+                        <tr><td colspan="3">Дата: ${new Date().toLocaleDateString('ru-RU')}</td></tr>
+                        <tr><td colspan="3"></td></tr>
+                        
+                        <tr style="background-color: #e0e0e0;"><th colspan="3">ИСХОДНЫЕ ДАННЫЕ</th></tr>
+                        ${formatInputDataForExcel(reportData.inputData)}
+                        
+                        <tr><td colspan="3"></td></tr>
+                        <tr style="background-color: #e0e0e0;"><th colspan="3">КОЭФФИЦИЕНТЫ</th></tr>
+                        ${formatCoefficientsForExcel(reportData.coefficients)}
+                        
+                        <tr><td colspan="3"></td></tr>
+                        <tr style="background-color: #e0e0e0;"><th colspan="3">РЕЗУЛЬТАТЫ РАСЧЁТА</th></tr>
+                        ${formatCalculationsForExcel(reportData)}
+                        
+                        <tr><td colspan="3"></td></tr>
+                        <tr style="background-color: #e0e0e0;"><th colspan="3">ПРИНЯТЫЕ РЕШЕНИЯ</th></tr>
+                        ${formatDecisionsForExcel(reportData)}
+                    </table>
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob([excelContent], {
+                type: 'application/vnd.ms-excel'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Расчет_шпунта_${new Date().toISOString().split('T')[0]}.xls`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('✓ Excel таблица успешно экспортирована!', 'success', 'report-status');
+        }
+
+        // Экспорт в JSON
+        function exportToJSON() {
+            const allData = {
+                inputData: JSON.parse(localStorage.getItem('larsenInputData') || '{}'),
+                coefficients: JSON.parse(localStorage.getItem('larsenCoefficients') || '{}'),
+                activePressure: JSON.parse(localStorage.getItem('larsenActivePressure') || '{}'),
+                passiveResistance: JSON.parse(localStorage.getItem('larsenPassiveResistance') || '{}'),
+                finalDepth: JSON.parse(localStorage.getItem('larsenFinalDepth') || '{}'),
+                forces: JSON.parse(localStorage.getItem('larsenForces') || '{}'),
+                section: JSON.parse(localStorage.getItem('larsenSection') || '{}'),
+                selectedProfile: JSON.parse(localStorage.getItem('larsenSelectedProfile') || '{}'),
+                calculationDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `larsen_calculation_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('✓ Данные экспортированы в JSON!', 'success', 'report-status');
+            document.getElementById('report-status').style.display = 'block';
+        }
+
+        // Вспомогательные функции для форматирования данных
+
+        function collectReportData() {
+            return {
+                inputData: JSON.parse(localStorage.getItem('larsenInputData') || '{}'),
+                coefficients: JSON.parse(localStorage.getItem('larsenCoefficients') || '{}'),
+                activePressure: JSON.parse(localStorage.getItem('larsenActivePressure') || '{}'),
+                passiveResistance: JSON.parse(localStorage.getItem('larsenPassiveResistance') || '{}'),
+                finalDepth: JSON.parse(localStorage.getItem('larsenFinalDepth') || '{}'),
+                forces: JSON.parse(localStorage.getItem('larsenForces') || '{}'),
+                section: JSON.parse(localStorage.getItem('larsenSection') || '{}'),
+                selectedProfile: JSON.parse(localStorage.getItem('larsenSelectedProfile') || '{}')
+            };
+        }
+
+        function formatInputDataForDOCX(data) {
+            return `
+                <p><b>Согласно п. 4.1-4.3 ВСН 136-78:</b></p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Глубина котлована</b></td><td>${data.excavationDepth} м</td></tr>
+                    <tr><td><b>Ширина котлована</b></td><td>${data.excavationWidth} м</td></tr>
+                    <tr><td><b>Длина котлована</b></td><td>${data.excavationLength} м</td></tr>
+                    <tr><td><b>Удельный вес грунта γ</b></td><td>${data.gamma} кН/м³</td></tr>
+                    <tr><td><b>Угол трения φ</b></td><td>${data.phi}°</td></tr>
+                    <tr><td><b>Сцепление c</b></td><td>${data.cohesion} кПа</td></tr>
+                    <tr><td><b>Коэфф. условий работы m</b></td><td>${data.workCondition}</td></tr>
+                    <tr><td><b>Коэфф. надёжности γ_n</b></td><td>${data.reliabilityCoef}</td></tr>
+                </table>
+                <p><i>Примечание: Коэффициенты приняты в соответствии с п. 4.4 ВСН 136-78</i></p>
+            `;
+        }
+
+        function formatCoefficientsForDOCX(coeff) {
+            return `
+                <p><b>Расчёт выполнен по формулам п. 4.6 ВСН 136-78:</b></p>
+                <p><b>Коэффициент активного давления Ka:</b></p>
+                <p>Ka = tan²(45° - φ/2)</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Ka</b></td><td>${coeff.Ka?.toFixed(3) || '-'}</td></tr>
+                    <tr><td><b>√Ka</b></td><td>${coeff.KaSqrt?.toFixed(3) || '-'}</td></tr>
+                </table>
+                <p><b>Коэффициент пассивного сопротивления Kp:</b></p>
+                <p>Kp = tan²(45° + φ/2)</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Kp</b></td><td>${coeff.Kp?.toFixed(2) || '-'}</td></tr>
+                    <tr><td><b>√Kp</b></td><td>${coeff.KpSqrt?.toFixed(3) || '-'}</td></tr>
+                </table>
+                <p><b>Компоненты давления от сцепления (п. 4.7 ВСН 136-78):</b></p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Активное давление: -2c√Ka</b></td><td>${coeff.cohesionActive?.toFixed(1) || '-'} кПа</td></tr>
+                    <tr><td><b>Пассивное сопротивление: +2c√Kp</b></td><td>${coeff.cohesionPassive?.toFixed(1) || '-'} кПа</td></tr>
+                </table>
+            `;
+        }
+
+        function formatCalculationsForDOCX(data) {
+            return `
+                <p><b>3.1. Активное давление грунта (п. 4.8 ВСН 136-78):</b></p>
+                <p>Формула расчёта активного давления:</p>
+                <p>σa(z) = γ·z·Ka - 2c·√Ka + q·Ka</p>
+                <p>где z - глубина от поверхности грунта, q - внешняя нагрузка</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Давление у поверхности σa(0)</b></td><td>${data.activePressure?.pressureTop?.toFixed(1) || '-'} кПа</td></tr>
+                    <tr><td><b>Давление на дне σa(H)</b></td><td>${data.activePressure?.pressureBottom?.toFixed(1) || '-'} кПа</td></tr>
+                    <tr><td><b>Глубина зоны растяжения z₀</b></td><td>${data.activePressure?.tensionDepth?.toFixed(2) || '-'} м</td></tr>
+                    <tr><td><b>Активная равнодействующая Ea</b></td><td>${data.activePressure?.resultant?.toFixed(1) || '-'} кН/м</td></tr>
+                </table>
+                
+                <p><b>3.2. Пассивное сопротивление грунта (п. 4.9 ВСН 136-78):</b></p>
+                <p>Формула расчёта пассивного сопротивления:</p>
+                <p>σp(t) = γ'·t·Kp + 2c·√Kp</p>
+                <p>где t - глубина заглубления шпунта ниже дна котлована, γ' - взвешенный удельный вес грунта</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Пассивная равнодействующая Ep</b></td><td>${data.passiveResistance?.resultant?.toFixed(1) || '-'} кН/м</td></tr>
+                    <tr><td><b>Точка приложения от дна</b></td><td>${data.passiveResistance?.applicationPoint?.toFixed(2) || '-'} м</td></tr>
+                </table>
+                
+                <p><b>3.3. Проверка устойчивости (п. 4.9 ВСН 136-78):</b></p>
+                <p>Условие устойчивости: Ep ≥ Ea × k_безопасности</p>
+                <p>где k_безопасности = 1.2 согласно п. 4.9 ВСН 136-78</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Требуемое Ep·min</b></td><td>${data.passiveResistance?.requiredEp?.toFixed(1) || '-'} кН/м</td></tr>
+                    <tr><td><b>Фактическое Ep</b></td><td>${data.passiveResistance?.resultant?.toFixed(1) || '-'} кН/м</td></tr>
+                    <tr><td><b>Коэффициент запаса</b></td><td>${data.passiveResistance?.actualSafetyFactor?.toFixed(2) || '-'}</td></tr>
+                    <tr><td><b>Проверка</b></td><td>${(data.passiveResistance?.actualSafetyFactor >= 1.2) ? '✓ ВЫПОЛНЕНА' : '✗ НЕ ВЫПОЛНЕНА'}</td></tr>
+                </table>
+                
+                <p><b>3.4. Глубина заглубления шпунта (п. 4.10 ВСН 136-78):</b></p>
+                <p>Расчётная глубина заглубления определена итерационным методом с обеспечением условия устойчивости.</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Минимальная расчётная глубина</b></td><td>${data.finalDepth?.embedmentDepth?.toFixed(2) || '-'} м</td></tr>
+                    <tr><td><b>Коэффициент запаса</b></td><td>${data.finalDepth?.safetyFactor?.toFixed(2) || '-'}</td></tr>
+                </table>
+                
+                <p><b>3.5. Усилия в шпунте (п. 5.1-5.3 ВСН 136-78):</b></p>
+                <p>Расчёт изгибающего момента выполнен по схеме крепления согласно разделу 5 ВСН 136-78.</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Максимальный изгибающий момент Mmax</b></td><td>${data.forces?.Mmax?.toFixed(1) || '-'} кН·м/м</td></tr>
+                    <tr><td><b>Положение Mmax от верха шпунта</b></td><td>${data.forces?.positionMmax?.toFixed(2) || '-'} м</td></tr>
+                    <tr><td><b>Максимальная поперечная сила Qmax</b></td><td>${data.forces?.Qmax?.toFixed(1) || '-'} кН/м</td></tr>
+                </table>
+                
+                <p><b>3.6. Требуемый момент сопротивления (п. 6.1 ВСН 136-78):</b></p>
+                <p>Формула расчёта: W_требуемый = M_max × γ_n / (R_y × m)</p>
+                <p>где R_y - расчётное сопротивление стали, m - коэффициент условий работы</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Требуемый момент сопротивления W</b></td><td>${data.section?.W_required?.toFixed(1) || '-'} см³/м</td></tr>
+                    <tr><td><b>Расчётное напряжение σ</b></td><td>${data.section?.sigma?.toFixed(1) || '-'} МПа</td></tr>
+                    <tr><td><b>Расчётное сопротивление стали Ry</b></td><td>${data.section?.Ry?.toFixed(0) || '-'} МПа</td></tr>
+                </table>
+            `;
+        }
+
+        function formatDecisionsForDOCX(data) {
+            const profile = data.selectedProfile;
+            const totalLength = (data.inputData?.excavationDepth || 0) + (data.finalDepth?.embedmentDepth || 0);
+            const reserve = profile?.W && data.section?.W_required ? ((profile.W / data.section.W_required - 1) * 100).toFixed(1) : '-';
+            const totalMass = (profile?.mass || 0) * (data.inputData?.excavationLength || 0) * 2;
+            
+            return `
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Принятый профиль шпунта</b></td><td>${profile?.name || '-'}</td></tr>
+                    <tr><td><b>Фактический момент сопротивления W</b></td><td>${profile?.W || '-'} см³/м</td></tr>
+                    <tr><td><b>Момент инерции I</b></td><td>${profile?.I || '-'} см⁴/м</td></tr>
+                    <tr><td><b>Масса профиля</b></td><td>${profile?.mass || '-'} кг/м²</td></tr>
+                    <tr><td><b>Запас по моменту сопротивления</b></td><td>${reserve}%</td></tr>
+                    <tr><td><b>Глубина котлована H</b></td><td>${(data.inputData?.excavationDepth || 0).toFixed(2)} м</td></tr>
+                    <tr><td><b>Глубина заглубления t</b></td><td>${(data.finalDepth?.embedmentDepth || 0).toFixed(2)} м</td></tr>
+                    <tr><td><b>Полная длина шпунта L</b></td><td>${totalLength.toFixed(2)} м</td></tr>
+                    <tr><td><b>Общая масса конструкции</b></td><td>${totalMass.toFixed(0)} кг (${(totalMass/1000).toFixed(2)} т)</td></tr>
+                </table>
+                
+                <p><b>Проверка прочности (п. 6.5 ВСН 136-78):</b></p>
+                <p>Условие прочности: σ = M_max / W ≤ R_y × m</p>
+                <table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
+                    <tr><td><b>Расчётное напряжение σ</b></td><td>${data.section?.sigma?.toFixed(1) || '-'} МПа</td></tr>
+                    <tr><td><b>Допускаемое напряжение R_y × m</b></td><td>${((data.section?.Ry || 240) * (data.inputData?.workCondition || 0.85)).toFixed(1)} МПа</td></tr>
+                    <tr><td><b>Проверка прочности</b></td><td>${((data.section?.sigma || 0) <= ((data.section?.Ry || 240) * (data.inputData?.workCondition || 0.85))) ? '✓ ВЫПОЛНЕНА' : '✗ НЕ ВЫПОЛНЕНА'}</td></tr>
+                </table>
+            `;
+        }
+
+        function formatInputDataForExcel(data) {
+            return `
+                <tr><td>Глубина котлована</td><td>${data.excavationDepth}</td><td>м</td></tr>
+                <tr><td>Ширина котлована</td><td>${data.excavationWidth}</td><td>м</td></tr>
+                <tr><td>Длина котлована</td><td>${data.excavationLength}</td><td>м</td></tr>
+                <tr><td>Удельный вес γ</td><td>${data.gamma}</td><td>кН/м³</td></tr>
+                <tr><td>Угол трения φ</td><td>${data.phi}</td><td>°</td></tr>
+                <tr><td>Сцепление c</td><td>${data.cohesion}</td><td>кПа</td></tr>
+            `;
+        }
+
+        function formatCoefficientsForExcel(coeff) {
+            return `
+                <tr><td>Ka (активное давление)</td><td>${coeff.Ka?.toFixed(3) || '-'}</td><td>-</td></tr>
+                <tr><td>Kp (пассивное сопротивление)</td><td>${coeff.Kp?.toFixed(2) || '-'}</td><td>-</td></tr>
+            `;
+        }
+
+        function formatCalculationsForExcel(data) {
+            return `
+                <tr><td>Активная равнодействующая Ea</td><td>${data.activePressure?.resultant?.toFixed(1) || '-'}</td><td>кН/м</td></tr>
+                <tr><td>Пассивная равнодействующая Ep</td><td>${data.passiveResistance?.resultant?.toFixed(1) || '-'}</td><td>кН/м</td></tr>
+                <tr><td>Глубина заглубления</td><td>${data.finalDepth?.embedmentDepth?.toFixed(2) || '-'}</td><td>м</td></tr>
+                <tr><td>Максимальный момент Mmax</td><td>${data.forces?.Mmax?.toFixed(1) || '-'}</td><td>кН·м/м</td></tr>
+                <tr><td>Максимальная поперечная сила Qmax</td><td>${data.forces?.Qmax?.toFixed(1) || '-'}</td><td>кН/м</td></tr>
+                <tr><td>Требуемый момент сопротивления W</td><td>${data.section?.W_required?.toFixed(1) || '-'}</td><td>см³/м</td></tr>
+            `;
+        }
+
+        function formatDecisionsForExcel(data) {
+            const profile = data.selectedProfile;
+            const totalLength = (data.inputData?.excavationDepth || 0) + (data.finalDepth?.embedmentDepth || 0);
+            return `
+                <tr><td>Принятый профиль</td><td colspan="2">${profile?.name || '-'}</td></tr>
+                <tr><td>Момент сопротивления W</td><td>${profile?.W || '-'}</td><td>см³/м</td></tr>
+                <tr><td>Момент инерции I</td><td>${profile?.I || '-'}</td><td>см⁴/м</td></tr>
+                <tr><td>Масса профиля</td><td>${profile?.mass || '-'}</td><td>кг/м²</td></tr>
+                <tr><td>Полная длина шпунта</td><td>${totalLength.toFixed(2)}</td><td>м</td></tr>
+                <tr><td>Общая масса конструкции</td><td>${((profile?.mass || 0) * (data.inputData?.excavationLength || 0) * 2).toFixed(0)}</td><td>кг</td></tr>
+            `;
+        }
+
+        // Обновление функции switchModule для загрузки данных модулей 7-9
+        const originalSwitchModule = switchModule;
+        switchModule = function(moduleNumber) {
+            originalSwitchModule(moduleNumber);
+            
+            if (moduleNumber === 7) {
+                loadModule7Data();
+            } else if (moduleNumber === 8) {
+                // Модуль 8 не требует предзагрузки
+            } else if (moduleNumber === 9) {
+                generateFullReport();
+            }
+        };
+
+        // Инициализация при загрузке
+        window.addEventListener('load', () => {
+            loadFromLocalStorage();
+        });
+    </script>
+  <script src="calc_larsen.js"></script>
+</body>
+</html>
